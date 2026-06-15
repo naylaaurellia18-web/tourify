@@ -3,22 +3,15 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// 2. Session harus distart PERTAMA sebelum include apapun
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-// 3. Hubungkan koneksi database Tourify
+// 2. Hubungkan koneksi database Tourify
 if (file_exists('api/koneksi.php')) {
     include 'api/koneksi.php';
 } elseif (file_exists('koneksi.php')) {
     include 'koneksi.php';
 }
 
-// 4. Cek login — redirect jika belum login
-if (!isset($_SESSION['login_user']) || $_SESSION['login_user'] !== true) {
-    header("Location: api/login.php");
-    exit;
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
 
 // Mengambil nama user yang sedang login
@@ -34,6 +27,12 @@ $total_voucher = 0;
 $total_pesanan = 0;   
 $total_pengeluaran = 0;
 
+// Data grafik per bulan (12 bulan, default 0 semua)
+$data_grafik = array_fill(0, 12, 0);
+
+// Pesanan terbaru untuk tabel aktivitas
+$pesanan_terbaru = [];
+
 // Sinkronisasi data asli dari MySQL jika database sudah siap
 if (isset($conn)) {
     try {
@@ -44,18 +43,48 @@ if (isset($conn)) {
         }
         
         $user_escaped = mysqli_real_escape_string($conn, $nama_tampil);
-        $q_order = mysqli_query($conn, "SELECT COUNT(*) as total, SUM(harga) as total_bayar FROM pesanan WHERE username = '$user_escaped'");
+
+        // FIX: kolom yang benar adalah total_bayar (bukan harga)
+        $q_order = mysqli_query($conn, "SELECT COUNT(*) as total, SUM(total_bayar) as total_pengeluaran FROM pesanan WHERE username = '$user_escaped'");
         if ($q_order) { 
             $row_order = mysqli_fetch_assoc($q_order); 
-            $total_pesanan = $row_order['total'] ?? 0;
-            $total_pengeluaran = $row_order['total_bayar'] ?? 0;
+            $total_pesanan     = $row_order['total'] ?? 0;
+            $total_pengeluaran = $row_order['total_pengeluaran'] ?? 0;
         }
         
-        $q_vouch = mysqli_query($conn, "SELECT COUNT(*) as total FROM voucher");
+        $q_vouch = mysqli_query($conn, "SELECT COUNT(*) as total FROM voucher WHERE aktif = 1");
         if ($q_vouch) {
             $row_vouch = mysqli_fetch_assoc($q_vouch);
             $total_voucher = $row_vouch['total'] ?? 0;
         }
+
+        // Query grafik: jumlah tiket per bulan di tahun ini
+        $q_grafik = mysqli_query($conn, "
+            SELECT MONTH(created_at) as bulan, COUNT(*) as jumlah 
+            FROM pesanan 
+            WHERE username = '$user_escaped' AND YEAR(created_at) = YEAR(NOW())
+            GROUP BY MONTH(created_at)
+        ");
+        if ($q_grafik) {
+            while ($row_g = mysqli_fetch_assoc($q_grafik)) {
+                $idx = (int)$row_g['bulan'] - 1; // bulan 1=Jan → index 0
+                $data_grafik[$idx] = (int)$row_g['jumlah'];
+            }
+        }
+
+        // Query 5 pesanan terbaru untuk tabel aktivitas
+        $q_terbaru = mysqli_query($conn, "
+            SELECT * FROM pesanan 
+            WHERE username = '$user_escaped' 
+            ORDER BY created_at DESC 
+            LIMIT 5
+        ");
+        if ($q_terbaru) {
+            while ($row_t = mysqli_fetch_assoc($q_terbaru)) {
+                $pesanan_terbaru[] = $row_t;
+            }
+        }
+
     } catch (Exception $e) {
         // Mencegah crash jika tabel belum lengkap
     }
@@ -455,18 +484,56 @@ $tahun_aktif = date('Y');
                 </div>
             </div>
 
-            <!-- Tabel Transaksi Kosong Sesuai image_765025.png -->
+            <!-- Tabel Transaksi Dinamis dari Database -->
             <div class="row g-4 mb-4">
                 <div class="col-lg-12">
                     <div class="card info-card">
                         <h5 class="fw-bold text-dark mb-1">Aktivitas Pembelian Tiket Terbaru</h5>
                         <p class="text-muted small mb-3">Daftar transaksi e-tiket terakhir yang terdaftar atas nama akun Anda.</p>
                         
+                        <?php if (empty($pesanan_terbaru)): ?>
                         <div class="empty-state-box">
                             <div class="empty-state-icon"><i class="bi bi-basket3"></i></div>
                             <h6 class="fw-bold text-dark mb-1">Belum Ada Riwayat Pesanan</h6>
                             <p class="text-muted small mb-0">Anda belum melakukan pemesanan tiket perjalanan. Semua riwayat transaksi Anda akan muncul di sini setelah pemesanan berhasil.</p>
                         </div>
+                        <?php else: ?>
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0" style="font-size:0.9rem;">
+                                <thead>
+                                    <tr style="background:#f8fafc; color:#64748b; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.5px;">
+                                        <th class="py-3 px-3">Kode</th>
+                                        <th class="py-3 px-3">Destinasi</th>
+                                        <th class="py-3 px-3">Tanggal</th>
+                                        <th class="py-3 px-3">Jumlah</th>
+                                        <th class="py-3 px-3">Total Bayar</th>
+                                        <th class="py-3 px-3 text-center">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($pesanan_terbaru as $p): ?>
+                                    <tr style="border-bottom:1px solid #f1f5f9;">
+                                        <td class="px-3 fw-bold text-primary">#TRF-<?= $p['id'] ?></td>
+                                        <td class="px-3 fw-semibold"><?= htmlspecialchars($p['wisata']) ?></td>
+                                        <td class="px-3 text-muted"><?= date('d M Y', strtotime($p['tanggal'])) ?></td>
+                                        <td class="px-3"><?= $p['jumlah'] ?> tiket</td>
+                                        <td class="px-3 fw-bold text-success">Rp <?= number_format($p['total_bayar'], 0, ',', '.') ?></td>
+                                        <td class="px-3 text-center">
+                                            <span class="badge rounded-pill" style="background:#dcfce7; color:#16a34a; padding:6px 12px; font-size:0.78rem;">
+                                                <i class="bi bi-check-circle-fill me-1"></i> E-Tiket Aktif
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-end mt-3">
+                            <a href="riwayat_pesanan.php" class="small fw-semibold text-decoration-none" style="color:var(--primary);">
+                                Lihat Semua Riwayat <i class="bi bi-arrow-right"></i>
+                            </a>
+                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -517,7 +584,7 @@ $tahun_aktif = date('Y');
         options: { responsive: true, maintainAspectRatio: false }
     });
 <?php else: ?>
-    // Script grafik utama
+    // Script grafik utama - data dari database
     const ctxMain = document.getElementById('chartPengeluaran').getContext('2d');
     new Chart(ctxMain, {
         type: 'bar',
@@ -525,11 +592,21 @@ $tahun_aktif = date('Y');
             labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'],
             datasets: [{
                 label: 'Jumlah Pembelian Tiket',
-                data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                backgroundColor: '#f37021'
+                data: <?= json_encode(array_values($data_grafik)) ?>,
+                backgroundColor: '#f37021',
+                borderRadius: 6
             }]
         },
-        options: { responsive: true, maintainAspectRatio: false }
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1, precision: 0 }
+                }
+            }
+        }
     });
 <?php endif; ?>
 </script>
