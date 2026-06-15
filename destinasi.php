@@ -1,17 +1,18 @@
 <?php
 // destinasi.php
 
-// 1. Ambil koneksi dari folder api/ atau utama
+// 1. Session harus distart PERTAMA
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// 2. Ambil koneksi dari folder api/ atau utama
 if (file_exists('api/koneksi.php')) {
     include 'api/koneksi.php';
 } elseif (file_exists('koneksi.php')) {
     include 'koneksi.php';
 } else {
     die("File koneksi.php tidak ditemukan.");
-}
-
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
 }
 
 // Tangkap promo dari URL dan simpan ke session jika ada
@@ -28,7 +29,7 @@ $nama_tampil = $_SESSION['user'] ?? $_SESSION['username'] ?? null;
 $is_logged_in   = $_SESSION['login_user'] ?? false;
 
 if (!$nama_tampil || !$is_logged_in) {
-    echo "<script>alert('Silakan login terlebih dahulu!'); window.location.href='api/login.php';</script>";
+    header("Location: login.php");
     exit();
 }
 
@@ -512,8 +513,8 @@ function lanjutBayar() {
     const potongan = params.get('potongan') || 0;
     const kode     = params.get('kode')     || '';
     
-    // Alihkan navigasi langsung ke halaman pesan.php
-    window.location.href = "pesan.php?wisata=" + encodeURIComponent(wisataTerpilih)
+    // Alihkan navigasi ke halaman konfirmasi_pesanan.php
+    window.location.href = "konfirmasi_pesanan.php?wisata=" + encodeURIComponent(wisataTerpilih)
         + "&harga="    + hargaTerpilih
         + "&diskon="   + diskon
         + "&potongan=" + potongan

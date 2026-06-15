@@ -1,15 +1,20 @@
 <?php
-// 1. Inisialisasi Sesi yang Aman
+// 1. Session harus distart PERTAMA
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
 // 2. Koneksi Database
-include 'api/koneksi.php'; 
+if (file_exists('api/koneksi.php')) {
+    include 'api/koneksi.php';
+} elseif (file_exists('koneksi.php')) {
+    include 'koneksi.php';
+}
 
 // 3. Cek Login
 $username_session = $_SESSION['user'] ?? $_SESSION['username'] ?? null;
-if (!$username_session) { 
+$is_logged_in = $_SESSION['login_user'] ?? false;
+if (!$username_session || !$is_logged_in) { 
     header("Location: login.php"); 
     exit(); 
 }

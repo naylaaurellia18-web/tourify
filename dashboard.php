@@ -3,15 +3,22 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// 2. Hubungkan koneksi database Tourify
+// 2. Session harus distart PERTAMA sebelum include apapun
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// 3. Hubungkan koneksi database Tourify
 if (file_exists('api/koneksi.php')) {
     include 'api/koneksi.php';
 } elseif (file_exists('koneksi.php')) {
     include 'koneksi.php';
 }
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+// 4. Cek login — redirect jika belum login
+if (!isset($_SESSION['login_user']) || $_SESSION['login_user'] !== true) {
+    header("Location: login.php");
+    exit;
 }
 
 // Mengambil nama user yang sedang login

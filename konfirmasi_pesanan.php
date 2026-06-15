@@ -1,14 +1,23 @@
 <?php
-// Perbaiki: Jangan memanggil session_start() jika sudah aktif
+// Perbaiki: Session harus distart PERTAMA
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Perbaiki: Ganti include 'koneksi.php' (yang salah nama) dengan path ke file database asli
-include 'api/koneksi.php'; 
+// Koneksi database
+if (file_exists('api/koneksi.php')) {
+    include 'api/koneksi.php';
+} elseif (file_exists('koneksi.php')) {
+    include 'koneksi.php';
+}
 
+// Cek login
 $username_session = $_SESSION['user'] ?? $_SESSION['username'] ?? null;
-if (!$username_session) { header("Location: login.php"); exit(); }
+$is_logged_in = $_SESSION['login_user'] ?? false;
+if (!$username_session || !$is_logged_in) { 
+    header("Location: login.php"); 
+    exit(); 
+}
 
 $wisata     = isset($_GET['wisata']) ? strip_tags($_GET['wisata']) : "Destinasi";
 $harga_asli = isset($_GET['harga']) ? (int)$_GET['harga'] : 0;
@@ -41,6 +50,7 @@ $tgl_min = date('Y-m-d', strtotime('+1 day'));
                 <form action="proses_pembayaran.php" method="POST">
                     <input type="hidden" name="wisata" value="<?= htmlspecialchars($wisata); ?>">
                     <input type="hidden" id="harga_dasar" name="harga_dasar" value="<?= $harga_asli; ?>">
+                    <input type="hidden" name="kode" value="<?= htmlspecialchars($_GET['kode'] ?? ''); ?>">
                     <div class="mb-3">
                         <label class="small text-muted fw-bold">Nama Lengkap Pemesan</label>
                         <input type="text" name="nama_pemesan" class="form-control" placeholder="Masukkan nama Anda" required>

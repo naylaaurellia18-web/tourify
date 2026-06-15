@@ -1,14 +1,14 @@
 <?php
-// api/login.php
+// login.php
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 date_default_timezone_set('Asia/Jakarta');
 $tahun_aktif = date('Y');
 
-// JIKA USER SUDAH LOGIN: Alihkan otomatis ke dashboard (naik 1 tingkat keluar folder api)
+// JIKA USER SUDAH LOGIN: Alihkan otomatis ke dashboard
 if ((isset($_SESSION['user']) || isset($_SESSION['username'])) && isset($_SESSION['login_user'])) {
-    header("Location: ../dashboard.php");
+    header("Location: dashboard.php");
     exit;
 }
 
@@ -39,8 +39,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['nama_lengkap']  = $row['nama_lengkap'];
             $_SESSION['login_user']   = true; // Wajib diset TRUE agar lolos validasi dashboard.php
             
-            // Redirect keluar dari folder api menuju ke dashboard.php di folder utama
-            header("Location: ../dashboard.php");
+            // Redirect ke dashboard.php di folder utama
+            header("Location: dashboard.php");
             exit;
         } else {
             $error_msg = "Kata sandi yang kamu masukkan salah!";

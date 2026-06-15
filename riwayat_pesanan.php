@@ -1,21 +1,31 @@
 <?php
-// 1. Pelacak error agar mudah debugging
+// 1. Session harus distart PERTAMA
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// 2. Pelacak error agar mudah debugging
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// 2. Hubungkan koneksi database Tourify / Tourify
+// 3. Hubungkan koneksi database Tourify
 if (file_exists('api/koneksi.php')) {
     include 'api/koneksi.php';
 } elseif (file_exists('koneksi.php')) {
     include 'koneksi.php';
 }
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+// Mengambil nama user yang sedang aktif
+$nama_tampil = $_SESSION['user'] ?? $_SESSION['username'] ?? null;
+$is_logged_in = $_SESSION['login_user'] ?? false;
+
+// Redirect ke login jika belum login
+if (!$nama_tampil || !$is_logged_in) {
+    header("Location: login.php");
+    exit();
 }
 
-// Mengambil nama user yang sedang aktif
-$nama_tampil = $_SESSION['user'] ?? $_SESSION['username'] ?? 'Pengguna';
+$nama_tampil = $nama_tampil ?? 'Pengguna';
 
 // Siapkan array kosong untuk menampung riwayat transaksi asli dari database
 $riwayat_pesanan = [];
@@ -307,9 +317,9 @@ $tahun_aktif = date('Y');
                                 <tr>
                                     <td class="text-muted"><?= $no++; ?></td>
                                     <td class="fw-bold text-primary">#TRF-<?= $pesanan['id'] ?? '000'; ?></td>
-                                    <td class="fw-semibold text-dark"><?= htmlspecialchars($pesanan['nama_destinasi'] ?? 'Wisata Pilihan'); ?></td>
+                                    <td class="fw-semibold text-dark"><?= htmlspecialchars($pesanan['wisata'] ?? 'Wisata Pilihan'); ?></td>
                                     <td><?= htmlspecialchars($pesanan['tanggal'] ?? date('d M Y')); ?></td>
-                                    <td class="fw-bold text-success">Rp <?= number_format($pesanan['harga'] ?? 0, 0, ',', '.'); ?></td>
+                                    <td class="fw-bold text-success">Rp <?= number_format($pesanan['total_bayar'] ?? 0, 0, ',', '.'); ?></td>
                                     <td class="text-center">
                                         <span class="badge-status bg-success bg-opacity-10 text-success">
                                             <i class="bi bi-check-circle-fill me-1"></i> E-Tiket Aktif
