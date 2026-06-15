@@ -1,0 +1,532 @@
+<?php
+// 1. Pelacak error agar tidak blank
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// 2. Hubungkan koneksi database Tourify
+if (file_exists('api/koneksi.php')) {
+    include 'api/koneksi.php';
+} elseif (file_exists('koneksi.php')) {
+    include 'koneksi.php';
+}
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Mengambil nama user yang sedang login
+$nama_tampil = $_SESSION['user'] ?? $_SESSION['username'] ?? 'Pengguna';
+$is_logged_in   = $_SESSION['login_user'] ?? false;
+
+// Cek halaman aktif di konten utama via parameter URL
+$page = $_GET['page'] ?? 'ringkasan';
+
+// Setel angka default ke 0
+$total_destinasi = 0; 
+$total_voucher = 0;   
+$total_pesanan = 0;   
+$total_pengeluaran = 0;
+
+// Sinkronisasi data asli dari MySQL jika database sudah siap
+if (isset($conn)) {
+    try {
+        $q_dest = mysqli_query($conn, "SELECT COUNT(*) as total FROM destinasi");
+        if ($q_dest) { 
+            $row_dest = mysqli_fetch_assoc($q_dest); 
+            $total_destinasi = $row_dest['total'] ?? 0;
+        }
+        
+        $user_escaped = mysqli_real_escape_string($conn, $nama_tampil);
+        $q_order = mysqli_query($conn, "SELECT COUNT(*) as total, SUM(harga) as total_bayar FROM pesanan WHERE username = '$user_escaped'");
+        if ($q_order) { 
+            $row_order = mysqli_fetch_assoc($q_order); 
+            $total_pesanan = $row_order['total'] ?? 0;
+            $total_pengeluaran = $row_order['total_bayar'] ?? 0;
+        }
+        
+        $q_vouch = mysqli_query($conn, "SELECT COUNT(*) as total FROM voucher");
+        if ($q_vouch) {
+            $row_vouch = mysqli_fetch_assoc($q_vouch);
+            $total_voucher = $row_vouch['total'] ?? 0;
+        }
+    } catch (Exception $e) {
+        // Mencegah crash jika tabel belum lengkap
+    }
+}
+
+date_default_timezone_set('Asia/Jakarta');
+$tahun_aktif = date('Y');
+?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Panel | Tourify</title>
+    
+    <!-- Google Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --bg-main: #f8fafc;
+            --bg-sidebar: #ffffff;
+            --primary: #f37021;
+            --primary-gradient: linear-gradient(135deg, #f37021, #ff8c42);
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
+        
+        body { 
+            background-color: var(--bg-main); 
+            font-family: 'Inter', sans-serif; 
+            color: var(--text-dark); 
+            margin: 0;
+            overflow-x: hidden;
+        }
+        
+        h1, h2, h3, h4, h5, h6, .brand-title { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            font-weight: 700; 
+        }
+        
+        .wrapper { display: flex; width: 100%; min-height: 100vh; }
+        
+        /* Sidebar Sesuai image_7657e9.png */
+        #sidebar { 
+            min-width: 260px; 
+            max-width: 260px; 
+            background: var(--bg-sidebar); 
+            border-right: 1px solid var(--border-color);
+        }
+        
+        .sidebar-header { 
+            padding: 30px 25px; 
+            border-bottom: 1px solid var(--border-color); 
+        }
+        
+        .nav-brand-box { 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            text-decoration: none; 
+            color: var(--text-dark); 
+        }
+        
+        .logo-icon { 
+            width: 35px; 
+            height: 35px; 
+            background: var(--primary-gradient); 
+            color: white; 
+            border-radius: 10px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            box-shadow: 0 4px 12px rgba(243, 112, 33, 0.2); 
+        }
+        
+        .sidebar-menu { padding: 25px 15px; list-style: none; margin: 0; }
+        .sidebar-menu li { margin-bottom: 6px; }
+        
+        .sidebar-menu a { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            padding: 12px 20px; 
+            color: var(--text-muted); 
+            text-decoration: none; 
+            border-radius: 12px; 
+            font-weight: 500; 
+            font-size: 0.95rem; 
+            transition: all 0.2s; 
+        }
+        
+        .sidebar-menu a:hover, .sidebar-menu li.active a { 
+            background: #fff3eb; 
+            color: var(--primary); 
+            font-weight: 600;
+        }
+        
+        #content { flex: 1; padding: 35px 40px; background-color: var(--bg-main); }
+        
+        .top-navbar { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 35px; 
+        }
+        
+        .user-profile-box { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            background: #ffffff; 
+            padding: 8px 20px; 
+            border-radius: 100px; 
+            border: 1px solid var(--border-color); 
+        }
+        
+        .avatar-circle { 
+            width: 35px; 
+            height: 35px; 
+            background: rgba(243, 112, 33, 0.1); 
+            color: var(--primary); 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-weight: 700; 
+        }
+        
+        .btn-logout { 
+            background: #fef2f2; 
+            color: #ef4444; 
+            border: 1px solid #fca5a5; 
+            padding: 10px 20px; 
+            border-radius: 100px; 
+            font-weight: 600; 
+            text-decoration: none; 
+            transition: 0.2s; 
+        }
+        .btn-logout:hover { background: #ef4444; color: white; }
+        
+        .welcome-banner { 
+            background: var(--primary-gradient); 
+            border-radius: 24px; 
+            padding: 32px; 
+            color: white; 
+            margin-bottom: 35px; 
+            box-shadow: 0 12px 30px rgba(243,112,33,0.15); 
+        }
+        
+        .stat-card { 
+            border: 1px solid var(--border-color); 
+            background: white; 
+            border-radius: 20px; 
+            padding: 20px; 
+        }
+        
+        .info-card { 
+            border: 1px solid var(--border-color); 
+            background: white; 
+            border-radius: 24px; 
+            padding: 25px; 
+            height: 100%; 
+        }
+        
+        .weather-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 16px; background: #f8fafc; border-radius: 12px; margin-bottom: 10px;
+            border: 1px solid var(--border-color);
+        }
+        .weather-badge { 
+            background: #fff; padding: 6px 12px; border-radius: 8px; 
+            font-size: 0.85rem; font-weight: 600; border: 1px solid var(--border-color);
+        }
+        
+        .empty-state-box { padding: 40px 20px; text-align: center; }
+        .empty-state-icon { font-size: 3rem; color: var(--text-muted); opacity: 0.4; margin-bottom: 15px; }
+        .tip-box { background: #fff7ed; border-left: 4px solid #f97316; padding: 15px; border-radius: 0 12px 12px 0; height: 100%; }
+        
+        /* Gaya Khusus untuk Halaman Tabel BPS */
+        .table-bps th { background-color: #f1f5f9; color: var(--text-dark); font-weight: 600; }
+        .badge-trend { padding: 5px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <!-- Sidebar Kiri Dinamis -->
+    <nav id="sidebar">
+        <div class="sidebar-header">
+            <a class="nav-brand-box" href="dashboard.php">
+                <div class="logo-icon"><i class="bi bi-compass-fill"></i></div>
+                <span class="brand-title">Tour<span style="color: var(--primary);">ify</span></span>
+            </a>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="<?= $page === 'ringkasan' ? 'active' : '' ?>"><a href="dashboard.php?page=ringkasan"><i class="bi bi-grid-1x2-fill"></i> Ringkasan</a></li>
+            <li><a href="destinasi.php"><i class="bi bi-ticket-perforated-fill"></i> Sistem Tiket</a></li>
+            <li><a href="promo.php"><i class="bi bi-tags-fill"></i> Promo Eksklusif</a></li>
+            <li class="<?= $page === 'bps' ? 'active' : '' ?>"><a href="dashboard.php?page=bps"><i class="bi bi-bar-chart-line-fill"></i> Statistik BPS</a></li>
+            <li><a href="riwayat_pesanan.php"><i class="bi bi-clock-history"></i> Riwayat Pesanan</a></li>
+        </ul>
+    </nav>
+
+    <!-- Konten Utama Kanan -->
+    <div id="content">
+        <!-- Top Navbar -->
+        <div class="top-navbar">
+            <div>
+                <h4 class="mb-1 text-dark"><?= $page === 'bps' ? 'Statistik & Analitik Wisata BPS' : 'Ringkasan Info & Insight Perjalanan 📊' ?></h4>
+                <p class="text-muted small mb-0"><?= $page === 'bps' ? 'Portal terintegrasi data makro Badan Pusat Statistik.' : 'Analisis pengeluaran dan status persiapan liburan Anda.' ?></p>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <div class="user-profile-box">
+                    <div class="avatar-circle"><i class="bi bi-person-fill"></i></div>
+                    <div class="small fw-semibold d-none d-sm-block">
+                        <?= htmlspecialchars($nama_tampil); ?>
+                        <span class="text-muted d-block" style="font-size: 0.75rem;">Status: Pengguna</span>
+                    </div>
+                </div>
+                <a href="logout.php" class="btn btn-logout"><i class="bi bi-box-arrow-right me-1"></i> Keluar</a>
+            </div>
+        </div>
+
+        <?php if ($page === 'bps'): ?>
+            <!-- ================= HALAMAN 1: KONTEN STATISTIK BPS ================= -->
+            <div class="welcome-banner" style="background: linear-gradient(135deg, #1e3a8a, #3b82f6);">
+                <span class="badge bg-white bg-opacity-20 text-white px-3 py-1.5 rounded-pill mb-2 small fw-bold" style="font-size:0.75rem;">Data Referensi Akademik</span>
+                <h2 class="fw-bold mb-1">Pusat Data Statistik Pariwisata Nasional</h2>
+                <p class="mb-0 text-white-50 small">Integrasi metrik perkembangan kunjungan wisata nusantara, mancanegara, serta tingkat okupansi akomodasi Indonesia.</p>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <!-- Grafik Kompleks BPS -->
+                <div class="col-lg-7">
+                    <div class="card info-card">
+                        <h5 class="fw-bold text-dark mb-1">Grafik Tren Kunjungan Wisatawan</h5>
+                        <p class="text-muted small mb-4">Estimasi volume mobilitas bulanan skala nasional.</p>
+                        <div style="position: relative; height:260px; width:100%">
+                            <canvas id="chartBpsWisata"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ringkasan Rasio Kartu -->
+                <div class="col-lg-5">
+                    <div class="card info-card">
+                        <h5 class="fw-bold text-dark mb-3">Indikator Kunci Utama</h5>
+                        
+                        <div class="p-3 border rounded-3 mb-3 bg-light bg-opacity-50">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted small">Tingkat Penghunian Kamar (TPK)</span>
+                                <span class="badge-trend bg-success text-white"><i class="bi bi-arrow-up"></i> +2.4%</span>
+                            </div>
+                            <h3 class="fw-bold text-primary mt-1 mb-0">51.34%</h3>
+                        </div>
+
+                        <div class="p-3 border rounded-3 mb-3 bg-light bg-opacity-50">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted small">Rata-rata Lama Menginap</span>
+                                <span class="badge-trend bg-secondary text-white">Stabil</span>
+                            </div>
+                            <h3 class="fw-bold text-dark mt-1 mb-0">1.62 Hari</h3>
+                        </div>
+
+                        <div class="p-3 border rounded-3 bg-light bg-opacity-50">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted small">Target Perjalanan Wisnus</span>
+                                <span class="badge-trend bg-success text-white">Tercapai</span>
+                            </div>
+                            <h3 class="fw-bold text-success mt-1 mb-0">849.3 Juta</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabel Data Rinci BPS -->
+            <div class="card info-card mb-4">
+                <h5 class="fw-bold text-dark mb-1">Tabel Perkembangan Pariwisata Berdasarkan Sektor</h5>
+                <p class="text-muted small mb-3">Rincian komparasi data akomodasi perhotelan skala besar dan menengah.</p>
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle table-bps mb-0">
+                        <thead>
+                            <tr>
+                                <th>Kategori Objek Data</th>
+                                <th class="text-center">Tahun Keluar</th>
+                                <th class="text-center">Nilai Capaian</th>
+                                <th class="text-center">Status Skala</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Hotel Klasifikasi Bintang (Nasional)</td>
+                                <td class="text-center"><?= $tahun_aktif ?></td>
+                                <td class="text-center fw-semibold text-primary">51.34% TPK</td>
+                                <td class="text-center"><span class="badge bg-primary">Sektor Utama</span></td>
+                            </tr>
+                            <tr>
+                                <td>Hotel Non-Bintang / Akomodasi Liburan</td>
+                                <td class="text-center"><?= $tahun_aktif ?></td>
+                                <td class="text-center fw-semibold">24.10% TPK</td>
+                                <td class="text-center"><span class="badge bg-secondary">Sektor Pendukung</span></td>
+                            </tr>
+                            <tr>
+                                <td>Rata Kunjungan Wisatawan Domestik (Jawa Timur)</td>
+                                <td class="text-center"><?= $tahun_aktif ?></td>
+                                <td class="text-center fw-semibold text-success">High Density</td>
+                                <td class="text-center"><span class="badge bg-success">Zona Padat</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        <?php else: ?>
+            <!-- ================= HALAMAN 2: HALAMAN UTAMA (RINGKASAN ASLI) ================= -->
+            <div class="welcome-banner">
+                <span class="badge bg-white bg-opacity-20 text-white px-3 py-1.5 rounded-pill mb-2 small fw-bold" style="font-size:0.75rem;">Sistem Sinkronisasi Terpadu</span>
+                <h2 class="fw-bold mb-1">Halo, <?= htmlspecialchars($nama_tampil); ?>!</h2>
+                <p class="mb-0 text-white-50 small">Berikut adalah statistik pengeluaran dan pemantauan kondisi cuaca daerah destinasi hari ini.</p>
+            </div>
+
+            <!-- Tiga Kotak Angka Ringkasan -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                    <div class="card stat-card d-flex flex-row align-items-center gap-3">
+                        <div class="p-3 rounded-4 bg-primary bg-opacity-10 text-primary"><i class="bi bi-wallet2 fs-4"></i></div>
+                        <div>
+                            <h6 class="text-muted small mb-0 fw-medium">Total Dana Keluar</h6>
+                            <h4 class="fw-bold mb-0 text-dark">Rp <?= number_format($total_pengeluaran, 0, ',', '.'); ?></h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card stat-card d-flex flex-row align-items-center gap-3">
+                        <div class="p-3 rounded-4 bg-success bg-opacity-10 text-success"><i class="bi bi-ticket-detailed fs-4"></i></div>
+                        <div>
+                            <h6 class="text-muted small mb-0 fw-medium">Kupon Tersedia</h6>
+                            <h4 class="fw-bold mb-0 text-dark"><?= $total_voucher; ?> Promo Aktif</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card stat-card d-flex flex-row align-items-center gap-3">
+                        <div class="p-3 rounded-4 bg-warning bg-opacity-10 text-warning"><i class="bi bi-cart-check fs-4"></i></div>
+                        <div>
+                            <h6 class="text-muted small mb-0 fw-medium">Pesanan Saya</h6>
+                            <h4 class="fw-bold mb-0 text-dark"><?= $total_pesanan; ?> Transaksi</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row Tengah: Grafik & Cuaca Valid -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-7">
+                    <div class="card info-card">
+                        <h5 class="fw-bold text-dark mb-1">Grafik Tren Liburan</h5>
+                        <p class="text-muted small mb-4">Estimasi perbandingan intensitas kunjungan wisata Anda per bulan (<?= $tahun_aktif ?>).</p>
+                        <div style="position: relative; height:220px; width:100%">
+                            <canvas id="chartPengeluaran"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-5">
+                    <div class="card info-card">
+                        <h5 class="fw-bold text-dark mb-1">Prakiraan Cuaca Destinasi ⛅</h5>
+                        <p class="text-muted small mb-3">Kondisi cuaca berkala di area sekitar Anda dan lokasi objek wisata utama.</p>
+                        
+                        <div class="d-flex flex-column">
+                            <div class="weather-row">
+                                <span class="fw-semibold small"><i class="bi bi-geo-alt-fill text-primary me-1"></i> Area Madiun & Caruban</span>
+                                <span class="weather-badge text-warning"><i class="bi bi-sun-fill me-1"></i> Cerah Berawan 31°C</span>
+                            </div>
+                            <div class="weather-row">
+                                <span class="fw-semibold small"><i class="bi bi-geo-alt-fill text-danger me-1"></i> Borobudur (Magelang)</span>
+                                <span class="weather-badge text-secondary"><i class="bi bi-cloud-sun me-1"></i> Berawan Sejuk 26°C</span>
+                            </div>
+                            <div class="weather-row">
+                                <span class="fw-semibold small"><i class="bi bi-geo-alt-fill text-danger me-1"></i> Tugu & Kota Lama (Semarang)</span>
+                                <span class="weather-badge text-primary"><i class="bi bi-cloud-rain me-1"></i> Hujan Ringan 28°C</span>
+                            </div>
+                            <div class="weather-row" style="margin-bottom:0;">
+                                <span class="fw-semibold small"><i class="bi bi-geo-alt-fill text-danger me-1"></i> Keraton & Safari (Surakarta)</span>
+                                <span class="weather-badge text-warning"><i class="bi bi-sun-fill me-1"></i> Cerah 30°C</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabel Transaksi Kosong Sesuai image_765025.png -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-12">
+                    <div class="card info-card">
+                        <h5 class="fw-bold text-dark mb-1">Aktivitas Pembelian Tiket Terbaru</h5>
+                        <p class="text-muted small mb-3">Daftar transaksi e-tiket terakhir yang terdaftar atas nama akun Anda.</p>
+                        
+                        <div class="empty-state-box">
+                            <div class="empty-state-icon"><i class="bi bi-basket3"></i></div>
+                            <h6 class="fw-bold text-dark mb-1">Belum Ada Riwayat Pesanan</h6>
+                            <p class="text-muted small mb-0">Anda belum melakukan pemesanan tiket perjalanan. Semua riwayat transaksi Anda akan muncul di sini setelah pemesanan berhasil.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panduan & Tips Liburan -->
+            <div class="card info-card">
+                <h5 class="fw-bold text-dark mb-3"><i class="bi bi-lightbulb-fill text-warning me-1"></i> Panduan & Tips Liburan Cerdas</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="tip-box">
+                            <h6 class="fw-bold text-warning-emphasis mb-1">Manfaatkan Kupon Di Hari Kerja (Weekday)</h6>
+                            <p class="text-secondary small mb-0">Tiket destinasi cenderung jauh lebih murah dan tidak padat pengunjung pada hari Senin-Jumat. Gunakan voucher-mu demi hemat maksimal!</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="tip-box" style="background: #ecfdf5; border-left-color: #10b981;">
+                            <h6 class="fw-bold text-success-emphasis mb-1">E-Tiket Paperless Aman & Praktis</h6>
+                            <p class="text-secondary small mb-0">Kamu tidak perlu mencetak tiket. Cukup tunjukkan kode pesanan di halaman Riwayat Pesanan langsung melalui smartphone di gerbang masuk.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
+
+        <div class="text-center mt-5 opacity-50 small">
+            <p>&copy; <?= $tahun_aktif; ?> Tourify. Hak Cipta Dilindungi Panel Pengguna.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+<?php if ($page === 'bps'): ?>
+    // Script grafik BPS
+    const ctxBps = document.getElementById('chartBpsWisata').getContext('2d');
+    new Chart(ctxBps, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'],
+            datasets: [{
+                label: 'Perjalanan Wisatawan Domestik (Juta)',
+                data: [45, 52, 49, 68, 74, 82, 71, 65, 60, 58, 62, 85],
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+<?php else: ?>
+    // Script grafik utama
+    const ctxMain = document.getElementById('chartPengeluaran').getContext('2d');
+    new Chart(ctxMain, {
+        type: 'bar',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'],
+            datasets: [{
+                label: 'Jumlah Pembelian Tiket',
+                data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                backgroundColor: '#f37021'
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+<?php endif; ?>
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
