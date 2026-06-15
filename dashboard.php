@@ -17,7 +17,7 @@ if (file_exists('api/koneksi.php')) {
 
 // 4. Cek login — redirect jika belum login
 if (!isset($_SESSION['login_user']) || $_SESSION['login_user'] !== true) {
-    header("Location: login.php");
+    header("Location: api/login.php");
     exit;
 }
 

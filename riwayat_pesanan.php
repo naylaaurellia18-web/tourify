@@ -21,7 +21,7 @@ $is_logged_in = $_SESSION['login_user'] ?? false;
 
 // Redirect ke login jika belum login
 if (!$nama_tampil || !$is_logged_in) {
-    header("Location: login.php");
+    header("Location: api/login.php");
     exit();
 }
 

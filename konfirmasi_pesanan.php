@@ -15,7 +15,7 @@ if (file_exists('api/koneksi.php')) {
 $username_session = $_SESSION['user'] ?? $_SESSION['username'] ?? null;
 $is_logged_in = $_SESSION['login_user'] ?? false;
 if (!$username_session || !$is_logged_in) { 
-    header("Location: login.php"); 
+    header("Location: api/login.php"); 
     exit(); 
 }
 

@@ -8,7 +8,7 @@ $tahun_aktif = date('Y');
 
 // JIKA USER SUDAH LOGIN: Alihkan otomatis ke dashboard
 if ((isset($_SESSION['user']) || isset($_SESSION['username'])) && isset($_SESSION['login_user'])) {
-    header("Location: dashboard.php");
+    header("Location: ../dashboard.php");
     exit;
 }
 
@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['login_user']   = true; // Wajib diset TRUE agar lolos validasi dashboard.php
             
             // Redirect ke dashboard.php di folder utama
-            header("Location: dashboard.php");
+            header("Location: ../dashboard.php");
             exit;
         } else {
             $error_msg = "Kata sandi yang kamu masukkan salah!";
