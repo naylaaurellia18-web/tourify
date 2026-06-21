@@ -6,12 +6,12 @@ ini_set('display_errors', 1);
 // 2. Hubungkan koneksi database Tourify
 $host     = "gateway01.ap-southeast-1.prod.alicloud.tidbcloud.com";
 $port     = 4000;
-$username = "3DA4d4bPMVCSuDy.root";
-$password = "mRSgOTH6qk79AieJ";
+$db_user  = "3DA4d4bPMVCSuDy.root";
+$db_pass  = "mRSgOTH6qk79AieJ";
 $database = "tourify-db";
 $conn = mysqli_init();
 mysqli_ssl_set($conn, NULL, NULL, NULL, NULL, NULL);
-mysqli_real_connect($conn, $host, $username, $password, $database, $port, NULL, MYSQLI_CLIENT_SSL);
+mysqli_real_connect($conn, $host, $db_user, $db_pass, $database, $port, NULL, MYSQLI_CLIENT_SSL);
 mysqli_set_charset($conn, "utf8mb4");
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -19,7 +19,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // Mengambil nama user yang sedang login
-$nama_tampil = $_SESSION['nama_lengkap'] ?? $_SESSION['username'] ?? $_SESSION['user'] ?? 'Pengguna';
+$nama_tampil    = $_SESSION['nama_lengkap'] ?? $_SESSION['username'] ?? $_SESSION['user'] ?? 'Pengguna';
 $username_login = $_SESSION['username'] ?? $_SESSION['user'] ?? '';
 $is_logged_in   = $_SESSION['login_user'] ?? false;
 
@@ -289,17 +289,17 @@ $tahun_aktif = date('Y');
     <!-- Sidebar Kiri Dinamis -->
     <nav id="sidebar">
         <div class="sidebar-header">
-            <a class="nav-brand-box" href="dashboard.php">
+            <a class="nav-brand-box" href="api/dashboard.php">
                 <div class="logo-icon"><i class="bi bi-compass-fill"></i></div>
                 <span class="brand-title">Tour<span style="color: var(--primary);">ify</span></span>
             </a>
         </div>
         <ul class="sidebar-menu">
-            <li class="<?= $page === 'ringkasan' ? 'active' : '' ?>"><a href="dashboard.php?page=ringkasan"><i class="bi bi-grid-1x2-fill"></i> Ringkasan</a></li>
-            <li><a href="destinasi.php"><i class="bi bi-ticket-perforated-fill"></i> Sistem Tiket</a></li>
-            <li><a href="promo.php"><i class="bi bi-tags-fill"></i> Promo Eksklusif</a></li>
-            <li class="<?= $page === 'bps' ? 'active' : '' ?>"><a href="dashboard.php?page=bps"><i class="bi bi-bar-chart-line-fill"></i> Statistik BPS</a></li>
-            <li><a href="riwayat_pesanan.php"><i class="bi bi-clock-history"></i> Riwayat Pesanan</a></li>
+            <li class="<?= $page === 'ringkasan' ? 'active' : '' ?>"><a href="api/dashboard.php?page=ringkasan"><i class="bi bi-grid-1x2-fill"></i> Ringkasan</a></li>
+            <li><a href="api/destinasi.php"><i class="bi bi-ticket-perforated-fill"></i> Sistem Tiket</a></li>
+            <li><a href="api/promo.php"><i class="bi bi-tags-fill"></i> Promo Eksklusif</a></li>
+            <li class="<?= $page === 'bps' ? 'active' : '' ?>"><a href="api/dashboard.php?page=bps"><i class="bi bi-bar-chart-line-fill"></i> Statistik BPS</a></li>
+            <li><a href="api/riwayat_pesanan.php"><i class="bi bi-clock-history"></i> Riwayat Pesanan</a></li>
         </ul>
     </nav>
 
@@ -319,7 +319,7 @@ $tahun_aktif = date('Y');
                         <span class="text-muted d-block" style="font-size: 0.75rem;">Status: Pengguna</span>
                     </div>
                 </div>
-                <a href="logout.php" class="btn btn-logout"><i class="bi bi-box-arrow-right me-1"></i> Keluar</a>
+                <a href="api/logout.php" class="btn btn-logout"><i class="bi bi-box-arrow-right me-1"></i> Keluar</a>
             </div>
         </div>
 
@@ -536,7 +536,7 @@ $tahun_aktif = date('Y');
                             </table>
                         </div>
                         <div class="text-end mt-3">
-                            <a href="riwayat_pesanan.php" class="small fw-semibold text-decoration-none" style="color:var(--primary);">
+                            <a href="api/riwayat_pesanan.php" class="small fw-semibold text-decoration-none" style="color:var(--primary);">
                                 Lihat Semua Riwayat <i class="bi bi-arrow-right"></i>
                             </a>
                         </div>

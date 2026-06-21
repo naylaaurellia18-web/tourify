@@ -7,14 +7,10 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // 2. Ambil koneksi dari folder api/ atau utama
-$host     = "gateway01.ap-southeast-1.prod.alicloud.tidbcloud.com";
-$port     = 4000;
-$username = "3DA4d4bPMVCSuDy.root";
-$password = "mRSgOTH6qk79AieJ";
-$database = "tourify-db";
 $conn = mysqli_init();
 mysqli_ssl_set($conn, NULL, NULL, NULL, NULL, NULL);
-mysqli_real_connect($conn, $host, $username, $password, $database, $port, NULL, MYSQLI_CLIENT_SSL);
+mysqli_real_connect($conn, "gateway01.ap-southeast-1.prod.alicloud.tidbcloud.com",
+    "3DA4d4bPMVCSuDy.root", "mRSgOTH6qk79AieJ", "tourify-db", 4000, NULL, MYSQLI_CLIENT_SSL);
 mysqli_set_charset($conn, "utf8mb4");
 
 // Tangkap promo dari URL dan simpan ke session jika ada
@@ -31,7 +27,7 @@ $nama_tampil = $_SESSION['nama_lengkap'] ?? $_SESSION['username'] ?? $_SESSION['
 $is_logged_in   = $_SESSION['login_user'] ?? false;
 
 if (!$nama_tampil || !$is_logged_in) {
-    header("Location: login.php");
+    header("Location: /api/login.php");
     exit();
 }
 
@@ -359,7 +355,7 @@ $tahun_aktif = date('Y');
     <!-- Sidebar Kiri -->
     <nav id="sidebar">
         <div class="sidebar-header">
-            <a class="nav-brand-box" href="dashboard.php">
+            <a class="nav-brand-box" href="/dashboard.php">
                 <div class="logo-icon"><i class="bi bi-compass-fill"></i></div>
                 <span class="brand-title">Tour<span style="color: var(--primary);">ify</span></span>
             </a>
@@ -367,7 +363,7 @@ $tahun_aktif = date('Y');
 
         <ul class="sidebar-menu">
             <li>
-                <a href="dashboard.php"><i class="bi bi-grid-1x2-fill"></i> Ringkasan</a>
+                <a href="/dashboard.php"><i class="bi bi-grid-1x2-fill"></i> Ringkasan</a>
             </li>
             <li class="active">
                 <a href="destinasi.php"><i class="bi bi-ticket-perforated-fill"></i> Sistem Tiket</a>
@@ -379,7 +375,7 @@ $tahun_aktif = date('Y');
                 <a href="statistik_bps.php"><i class="bi bi-graph-up-arrow"></i> Statistik BPS</a>
             </li>
             <li>
-                <a href="riwayat_pesanan.php"><i class="bi bi-clock-history"></i> Riwayat Pesanan</a>
+                <a href="/api/riwayat_pesanan.php"><i class="bi bi-clock-history"></i> Riwayat Pesanan</a>
             </li>
         </ul>
     </nav>
@@ -401,7 +397,7 @@ $tahun_aktif = date('Y');
                         <span class="text-muted d-block" style="font-size: 0.75rem;">Status: Aktif</span>
                     </div>
                 </div>
-                <a href="api/logout.php" class="btn btn-logout text-decoration-none"><i class="bi bi-box-arrow-right me-1"></i> Keluar</a>
+                <a href="/api/logout.php" class="btn btn-logout text-decoration-none"><i class="bi bi-box-arrow-right me-1"></i> Keluar</a>
             </div>
         </div>
 
@@ -567,7 +563,7 @@ function lanjutBayar() {
     const kode     = params.get('kode')     || '';
     
     // Alihkan navigasi ke halaman konfirmasi_pesanan.php
-    window.location.href = "konfirmasi_pesanan.php?wisata=" + encodeURIComponent(wisataTerpilih)
+    window.location.href = "/api/konfirmasi_pesanan.php?wisata=" + encodeURIComponent(wisataTerpilih)
         + "&harga="    + hargaTerpilih
         + "&diskon="   + diskon
         + "&potongan=" + potongan
