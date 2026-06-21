@@ -1,7 +1,5 @@
 <?php
-// destinasi.php
-
-// 1. Session harus distart PERTAMA
+// URUTAN WAJIB: ini_set -> session_start -> cek login -> koneksi DB
 ini_set('session.save_path', '/tmp');
 ini_set('session.cookie_samesite', 'None');
 ini_set('session.cookie_secure', '1');
@@ -9,13 +7,23 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// 2. Ambil koneksi dari folder api/ atau utama
+// Cek login
+if (empty($_SESSION['login_user'])) {
+    header("Location: /login.php");
+    exit;
+}
+
+// Ambil nama user
+$nama_tampil = !empty($_SESSION['nama_lengkap']) ? $_SESSION['nama_lengkap']
+             : (!empty($_SESSION['username']) ? $_SESSION['username'] : 'Pengguna');
+$username_login = $_SESSION['username'] ?? $_SESSION['user'] ?? '';
+
+// Koneksi TiDB
 $conn = mysqli_init();
 mysqli_ssl_set($conn, NULL, NULL, NULL, NULL, NULL);
 mysqli_real_connect($conn, "gateway01.ap-southeast-1.prod.alicloud.tidbcloud.com",
     "3DA4d4bPMVCSuDy.root", "mRSgOTH6qk79AieJ", "tourify-db", 4000, NULL, MYSQLI_CLIENT_SSL);
 mysqli_set_charset($conn, "utf8mb4");
-
 // Tangkap promo dari URL dan simpan ke session jika ada
 if (isset($_GET['kode'])) {
     $_SESSION['promo_aktif'] = [
@@ -27,12 +35,6 @@ if (isset($_GET['kode'])) {
 
 // Ambil data login user
 $nama_tampil = $_SESSION['nama_lengkap'] ?? $_SESSION['username'] ?? $_SESSION['user'] ?? null;
-$is_logged_in   = $_SESSION['login_user'] ?? false;
-
-if (!$nama_tampil || !$is_logged_in) {
-    header("Location: /api/login.php");
-    exit();
-}
 
 // Ambil daftar destinasi dari database
 $db = $conn;

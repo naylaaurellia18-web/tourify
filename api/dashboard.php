@@ -1,9 +1,25 @@
 <?php
-// 1. Pelacak error agar tidak blank
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+// URUTAN WAJIB: ini_set -> session_start -> cek login -> koneksi DB
+ini_set('session.save_path', '/tmp');
+ini_set('session.cookie_samesite', 'None');
+ini_set('session.cookie_secure', '1');
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-// 2. Hubungkan koneksi database Tourify
+// Cek login - redirect jika belum login
+if (empty($_SESSION['login_user'])) {
+    header("Location: /login.php");
+    exit;
+}
+
+// Ambil data session user
+$nama_tampil    = !empty($_SESSION['nama_lengkap']) ? $_SESSION['nama_lengkap'] 
+                : (!empty($_SESSION['username']) ? $_SESSION['username'] : 'Pengguna');
+$username_login = $_SESSION['username'] ?? $_SESSION['user'] ?? '';
+$is_logged_in   = true;
+
+// Koneksi database TiDB
 $host     = "gateway01.ap-southeast-1.prod.alicloud.tidbcloud.com";
 $port     = 4000;
 $db_user  = "3DA4d4bPMVCSuDy.root";
@@ -13,26 +29,6 @@ $conn = mysqli_init();
 mysqli_ssl_set($conn, NULL, NULL, NULL, NULL, NULL);
 mysqli_real_connect($conn, $host, $db_user, $db_pass, $database, $port, NULL, MYSQLI_CLIENT_SSL);
 mysqli_set_charset($conn, "utf8mb4");
-
-if (session_status() === PHP_SESSION_NONE) {
-    // Fix session untuk Vercel serverless
-ini_set('session.save_path', '/tmp');
-ini_set('session.cookie_samesite', 'None');
-ini_set('session.cookie_secure', '1');
-session_start();
-}
-
-// Mengambil nama user yang sedang login
-// Ambil nama dari session - cek semua kemungkinan key
-$nama_tampil = '';
-if (!empty($_SESSION['nama_lengkap'])) $nama_tampil = $_SESSION['nama_lengkap'];
-elseif (!empty($_SESSION['nama'])) $nama_tampil = $_SESSION['nama'];
-elseif (!empty($_SESSION['username'])) $nama_tampil = $_SESSION['username'];
-elseif (!empty($_SESSION['user'])) $nama_tampil = $_SESSION['user'];
-else $nama_tampil = 'Pengguna';
-$username_login = $_SESSION['username'] ?? $_SESSION['user'] ?? '';
-$username_login = $_SESSION['username'] ?? $_SESSION['user'] ?? '';
-$is_logged_in   = $_SESSION['login_user'] ?? false;
 
 // Cek halaman aktif di konten utama via parameter URL
 $page = $_GET['page'] ?? 'ringkasan';
