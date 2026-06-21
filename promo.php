@@ -24,7 +24,13 @@ if (!$nama_tampil || !$is_logged_in) {
 // 4. Ambil semua voucher aktif dari database
 $daftar_voucher = [];
 if (isset($conn)) {
-    $q = mysqli_query($conn, "SELECT * FROM voucher WHERE aktif = 1 ORDER BY id ASC");
+    $q = mysqli_query($conn, "
+        SELECT v.*, d.nama_destinasi
+        FROM voucher v
+        LEFT JOIN destinasi d ON d.id_destinasi = v.id_destinasi
+        WHERE v.aktif = 1
+        ORDER BY v.id ASC
+    ");
     if ($q) {
         while ($row = mysqli_fetch_assoc($q)) {
             $daftar_voucher[] = $row;
@@ -240,6 +246,15 @@ $tahun_aktif = date('Y');
                 <div class="col-md-6 col-lg-4">
                     <div class="voucher-card">
                         <div class="voucher-badge mb-2"><?= $nilai ?></div>
+                        <?php if (!empty($v['nama_destinasi'])): ?>
+                            <span class="badge mb-2" style="background:#f5f3ff;color:#7c3aed;border-radius:20px;font-size:0.7rem;font-weight:700;padding:5px 12px;">
+                                <i class="bi bi-geo-alt-fill me-1"></i>Khusus <?= htmlspecialchars($v['nama_destinasi']) ?>
+                            </span>
+                        <?php else: ?>
+                            <span class="badge mb-2" style="background:#eff6ff;color:#2563eb;border-radius:20px;font-size:0.7rem;font-weight:700;padding:5px 12px;">
+                                <i class="bi bi-stars me-1"></i>Berlaku Semua Destinasi
+                            </span>
+                        <?php endif; ?>
                         <p class="text-muted small mb-3"><?= htmlspecialchars($v['keterangan']) ?></p>
                         <div>
                             <div class="kode-box" onclick="salinKode('<?= $v['kode'] ?>', this)" title="Klik untuk menyalin">

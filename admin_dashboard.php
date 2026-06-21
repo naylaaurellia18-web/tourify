@@ -125,7 +125,10 @@ if ($qg) {
         <div class="card border-0 p-4" style="border-radius:16px;box-shadow:0 2px 16px rgba(0,0,0,0.05);">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h6 class="fw-bold mb-0" style="color:#0f172a;"><i class="bi bi-clock-history me-2 text-muted"></i>Pesanan Terbaru</h6>
-                <a href="riwayat_pesanan.php" class="small text-decoration-none" style="color:#f37021;">Lihat Semua →</a>
+                <div class="d-flex align-items-center gap-3">
+                    <a href="admin_export_pesanan.php" class="small text-decoration-none fw-semibold" style="color:#16a34a;"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Export CSV</a>
+                    <a href="riwayat_pesanan.php" class="small text-decoration-none" style="color:#f37021;">Lihat Semua →</a>
+                </div>
             </div>
             <table class="table table-hover align-middle mb-0">
                 <thead style="background:#f8fafc;">
@@ -203,7 +206,7 @@ if ($qg) {
         </thead>
         <tbody>
             <?php 
-            $dest = mysqli_query($conn, "SELECT * FROM destinasi ORDER BY id ASC");
+            $dest = mysqli_query($conn, "SELECT * FROM destinasi ORDER BY id_destinasi ASC");
             if ($dest && mysqli_num_rows($dest) > 0):
                 while($d = mysqli_fetch_assoc($dest)):
                     $stok = (int)($d['stok_tiket'] ?? 0);
