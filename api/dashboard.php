@@ -15,7 +15,11 @@ mysqli_real_connect($conn, $host, $db_user, $db_pass, $database, $port, NULL, MY
 mysqli_set_charset($conn, "utf8mb4");
 
 if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+    // Fix session untuk Vercel serverless
+ini_set('session.save_path', '/tmp');
+ini_set('session.cookie_samesite', 'None');
+ini_set('session.cookie_secure', '1');
+session_start();
 }
 
 // Mengambil nama user yang sedang login
