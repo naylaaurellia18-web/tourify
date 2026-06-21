@@ -1,11 +1,10 @@
 <?php
 // login.php
-if (session_status() === PHP_SESSION_NONE) {
-    // Fix session untuk Vercel serverless
 ini_set('session.save_path', '/tmp');
 ini_set('session.cookie_samesite', 'None');
 ini_set('session.cookie_secure', '1');
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
 date_default_timezone_set('Asia/Jakarta');
 $tahun_aktif = date('Y');
@@ -72,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 // SET SESSION UNTUK DAHSBOARD
                 $_SESSION['id_user']      = $row['id'];
                 $_SESSION['username']     = $row['username']; 
-                $_SESSION['nama_lengkap']  = $row['nama_lengkap'];
+                $_SESSION['nama_lengkap'] = $row['nama_lengkap'] ?? $row['nama'] ?? $row['username'];
                 $_SESSION['login_user']   = true; // Wajib diset TRUE agar lolos validasi dashboard.php
 
                 // Redirect ke dashboard.php di folder utama

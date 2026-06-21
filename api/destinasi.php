@@ -2,6 +2,9 @@
 // destinasi.php
 
 // 1. Session harus distart PERTAMA
+ini_set('session.save_path', '/tmp');
+ini_set('session.cookie_samesite', 'None');
+ini_set('session.cookie_secure', '1');
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -366,10 +369,10 @@ $tahun_aktif = date('Y');
                 <a href="/dashboard.php"><i class="bi bi-grid-1x2-fill"></i> Ringkasan</a>
             </li>
             <li class="active">
-                <a href="destinasi.php"><i class="bi bi-ticket-perforated-fill"></i> Sistem Tiket</a>
+                <a href="/destinasi.php"><i class="bi bi-ticket-perforated-fill"></i> Sistem Tiket</a>
             </li>
             <li>
-                <a href="promo.php"><i class="bi bi-tags-fill"></i> Promo Eksklusif</a>
+                <a href="/promo.php"><i class="bi bi-tags-fill"></i> Promo Eksklusif</a>
             </li>
             <li>
                 <a href="statistik_bps.php"><i class="bi bi-graph-up-arrow"></i> Statistik BPS</a>
@@ -397,7 +400,7 @@ $tahun_aktif = date('Y');
                         <span class="text-muted d-block" style="font-size: 0.75rem;">Status: Aktif</span>
                     </div>
                 </div>
-                <a href="/api/logout.php" class="btn btn-logout text-decoration-none"><i class="bi bi-box-arrow-right me-1"></i> Keluar</a>
+                <a href="/logout.php" class="btn btn-logout text-decoration-none"><i class="bi bi-box-arrow-right me-1"></i> Keluar</a>
             </div>
         </div>
 

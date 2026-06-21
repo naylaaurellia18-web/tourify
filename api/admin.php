@@ -12,7 +12,7 @@ mysqli_set_charset($conn, "utf8mb4");
 
 // --- Wajib login sebagai admin ---
 if (empty($_SESSION['admin_id'])) {
-    header("Location: /api/login.php");
+    header("Location: /login.php");
     exit();
 }
 
@@ -110,13 +110,13 @@ $page_file_map = [
             <a href="?page=destinasi_detail&id=<?= $admin_destinasi ?>" class="nav-link <?= $page=='destinasi_detail'?'active':'' ?>">Destinasi Saya</a>
         <?php endif; ?>
 
-        <hr><a href="/api/logout.php" class="nav-link text-danger">Logout</a>
+        <hr><a href="/logout.php" class="nav-link text-danger">Logout</a>
     </div>
     <div class="main">
         <?php 
         if (isset($page_file_map[$page])) {
             $file = $page_file_map[$page];
-            if (file_exists($file)) include $file;
+            if (file_exists(__DIR__.'/'.$file)) include __DIR__.'/'.$file;
             else echo "<div class='alert alert-warning'>File <code>$file</code> tidak ditemukan.</div>";
         } else {
             echo "<h3>Halaman tidak ditemukan</h3>";

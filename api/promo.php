@@ -2,22 +2,30 @@
 // promo.php - Halaman Daftar Promo & Voucher
 
 // 1. Session pertama
+ini_set('session.save_path', '/tmp');
+ini_set('session.cookie_samesite', 'None');
+ini_set('session.cookie_secure', '1');
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
 // 2. Koneksi database
-if (file_exists('api/koneksi.php')) {
-    include 'api/koneksi.php';
-} elseif (file_exists('koneksi.php')) {
-    include 'koneksi.php';
-}
+// Fix session Vercel
+ini_set('session.save_path', '/tmp');
+ini_set('session.cookie_samesite', 'None');
+ini_set('session.cookie_secure', '1');
+
+$conn = mysqli_init();
+mysqli_ssl_set($conn, NULL, NULL, NULL, NULL, NULL);
+mysqli_real_connect($conn, "gateway01.ap-southeast-1.prod.alicloud.tidbcloud.com",
+    "3DA4d4bPMVCSuDy.root", "mRSgOTH6qk79AieJ", "tourify-db", 4000, NULL, MYSQLI_CLIENT_SSL);
+mysqli_set_charset($conn, "utf8mb4");
 
 // 3. Cek login
-$nama_tampil  = $_SESSION['user'] ?? $_SESSION['username'] ?? null;
+$nama_tampil = !empty($_SESSION['nama_lengkap']) ? $_SESSION['nama_lengkap'] : (!empty($_SESSION['username']) ? $_SESSION['username'] : (!empty($_SESSION['user']) ? $_SESSION['user'] : null));
 $is_logged_in = $_SESSION['login_user'] ?? false;
 if (!$nama_tampil || !$is_logged_in) {
-    header("Location: api/login.php");
+    header("Location: /login.php");
     exit();
 }
 
@@ -189,17 +197,17 @@ $tahun_aktif = date('Y');
     <!-- Sidebar -->
     <nav id="sidebar">
         <div class="sidebar-header">
-            <a class="nav-brand-box" href="dashboard.php">
+            <a class="nav-brand-box" href="/dashboard.php">
                 <div class="logo-icon"><i class="bi bi-compass-fill"></i></div>
                 <span class="brand-title" style="font-size:1.4rem;">Tour<span style="color:var(--primary);">ify</span></span>
             </a>
         </div>
         <ul class="sidebar-menu">
-            <li><a href="dashboard.php"><i class="bi bi-grid-1x2-fill"></i> Ringkasan</a></li>
-            <li><a href="destinasi.php"><i class="bi bi-ticket-perforated-fill"></i> Sistem Tiket</a></li>
-            <li class="active"><a href="promo.php"><i class="bi bi-tags-fill"></i> Promo Eksklusif</a></li>
-            <li><a href="dashboard.php?page=bps_stat"><i class="bi bi-bar-chart-line-fill"></i> Statistik BPS</a></li>
-            <li><a href="riwayat_pesanan.php"><i class="bi bi-clock-history"></i> Riwayat Pesanan</a></li>
+            <li><a href="/dashboard.php"><i class="bi bi-grid-1x2-fill"></i> Ringkasan</a></li>
+            <li><a href="/destinasi.php"><i class="bi bi-ticket-perforated-fill"></i> Sistem Tiket</a></li>
+            <li class="active"><a href="/promo.php"><i class="bi bi-tags-fill"></i> Promo Eksklusif</a></li>
+            <li><a href="/dashboard.php?page=bps_stat"><i class="bi bi-bar-chart-line-fill"></i> Statistik BPS</a></li>
+            <li><a href="/riwayat_pesanan.php"><i class="bi bi-clock-history"></i> Riwayat Pesanan</a></li>
         </ul>
     </nav>
 
@@ -219,14 +227,14 @@ $tahun_aktif = date('Y');
                         <span class="text-muted d-block" style="font-size:0.75rem;">Pengguna</span>
                     </div>
                 </div>
-                <a href="logout.php" class="btn-logout"><i class="bi bi-box-arrow-right me-1"></i> Keluar</a>
+                <a href="/logout.php" class="btn-logout"><i class="bi bi-box-arrow-right me-1"></i> Keluar</a>
             </div>
         </div>
 
         <!-- Banner Info -->
         <div class="p-4 mb-4 rounded-4 text-white" style="background: var(--primary-gradient);">
             <h5 class="fw-bold mb-1"><i class="bi bi-gift-fill me-2"></i>Cara Pakai Voucher</h5>
-            <p class="mb-0 small opacity-75">Pilih destinasi di <a href="destinasi.php" class="text-white fw-bold">Sistem Tiket</a>, masukkan kode voucher di kolom promo saat checkout, lalu diskon otomatis terpotong dari total pembayaran.</p>
+            <p class="mb-0 small opacity-75">Pilih destinasi di <a href="/destinasi.php" class="text-white fw-bold">Sistem Tiket</a>, masukkan kode voucher di kolom promo saat checkout, lalu diskon otomatis terpotong dari total pembayaran.</p>
         </div>
 
         <!-- Grid Voucher -->

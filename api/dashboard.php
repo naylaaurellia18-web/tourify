@@ -23,7 +23,14 @@ session_start();
 }
 
 // Mengambil nama user yang sedang login
-$nama_tampil    = $_SESSION['nama_lengkap'] ?? $_SESSION['username'] ?? $_SESSION['user'] ?? 'Pengguna';
+// Ambil nama dari session - cek semua kemungkinan key
+$nama_tampil = '';
+if (!empty($_SESSION['nama_lengkap'])) $nama_tampil = $_SESSION['nama_lengkap'];
+elseif (!empty($_SESSION['nama'])) $nama_tampil = $_SESSION['nama'];
+elseif (!empty($_SESSION['username'])) $nama_tampil = $_SESSION['username'];
+elseif (!empty($_SESSION['user'])) $nama_tampil = $_SESSION['user'];
+else $nama_tampil = 'Pengguna';
+$username_login = $_SESSION['username'] ?? $_SESSION['user'] ?? '';
 $username_login = $_SESSION['username'] ?? $_SESSION['user'] ?? '';
 $is_logged_in   = $_SESSION['login_user'] ?? false;
 
