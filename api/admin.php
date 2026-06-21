@@ -1,10 +1,14 @@
 <?php
 session_start();
-include 'api/koneksi.php';
+$conn = mysqli_init();
+mysqli_ssl_set($conn, NULL, NULL, NULL, NULL, NULL);
+mysqli_real_connect($conn, "gateway01.ap-southeast-1.prod.alicloud.tidbcloud.com",
+    "3DA4d4bPMVCSuDy.root", "mRSgOTH6qk79AieJ", "tourify-db", 4000, NULL, MYSQLI_CLIENT_SSL);
+mysqli_set_charset($conn, "utf8mb4");
 
 // --- Wajib login sebagai admin ---
 if (empty($_SESSION['admin_id'])) {
-    header("Location: api/login.php");
+    header("Location: /api/login.php");
     exit();
 }
 
@@ -102,7 +106,7 @@ $page_file_map = [
             <a href="?page=destinasi_detail&id=<?= $admin_destinasi ?>" class="nav-link <?= $page=='destinasi_detail'?'active':'' ?>">Destinasi Saya</a>
         <?php endif; ?>
 
-        <hr><a href="logout.php" class="nav-link text-danger">Logout</a>
+        <hr><a href="/api/logout.php" class="nav-link text-danger">Logout</a>
     </div>
     <div class="main">
         <?php 

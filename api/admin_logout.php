@@ -11,6 +11,6 @@ unset($_SESSION['admin_nama']);
 unset($_SESSION['admin_role']);
 unset($_SESSION['admin_destinasi']);
 
-header("Location: admin_login.php");
+header("Location: /api/login.php");
 exit();
 ?>
