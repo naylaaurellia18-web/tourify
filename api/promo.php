@@ -1,7 +1,7 @@
 <?php
 // promo.php - Halaman Daftar Promo & Voucher
 
-// 1. Session pertama
+// 1. Session + koneksi (urutan wajib: ini_set -> session_start -> koneksi)
 ini_set('session.save_path', '/tmp');
 ini_set('session.cookie_samesite', 'None');
 ini_set('session.cookie_secure', '1');
@@ -9,12 +9,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// 2. Koneksi database
-// Fix session Vercel
-ini_set('session.save_path', '/tmp');
-ini_set('session.cookie_samesite', 'None');
-ini_set('session.cookie_secure', '1');
-
+// 2. Koneksi database TiDB
 $conn = mysqli_init();
 mysqli_ssl_set($conn, NULL, NULL, NULL, NULL, NULL);
 mysqli_real_connect($conn, "gateway01.ap-southeast-1.prod.alicloud.tidbcloud.com",
