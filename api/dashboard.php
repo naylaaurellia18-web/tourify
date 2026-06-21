@@ -4,18 +4,23 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 // 2. Hubungkan koneksi database Tourify
-if (file_exists('api/koneksi.php')) {
-    include 'api/koneksi.php';
-} elseif (file_exists('koneksi.php')) {
-    include 'koneksi.php';
-}
+$host     = "gateway01.ap-southeast-1.prod.alicloud.tidbcloud.com";
+$port     = 4000;
+$username = "3DA4d4bPMVCSuDy.root";
+$password = "mRSgOTH6qk79AieJ";
+$database = "tourify-db";
+$conn = mysqli_init();
+mysqli_ssl_set($conn, NULL, NULL, NULL, NULL, NULL);
+mysqli_real_connect($conn, $host, $username, $password, $database, $port, NULL, MYSQLI_CLIENT_SSL);
+mysqli_set_charset($conn, "utf8mb4");
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
 // Mengambil nama user yang sedang login
-$nama_tampil = $_SESSION['user'] ?? $_SESSION['username'] ?? 'Pengguna';
+$nama_tampil = $_SESSION['nama_lengkap'] ?? $_SESSION['username'] ?? $_SESSION['user'] ?? 'Pengguna';
+$username_login = $_SESSION['username'] ?? $_SESSION['user'] ?? '';
 $is_logged_in   = $_SESSION['login_user'] ?? false;
 
 // Cek halaman aktif di konten utama via parameter URL
@@ -42,7 +47,7 @@ if (isset($conn)) {
             $total_destinasi = $row_dest['total'] ?? 0;
         }
         
-        $user_escaped = mysqli_real_escape_string($conn, $nama_tampil);
+        $user_escaped = mysqli_real_escape_string($conn, $username_login);
 
         // FIX: kolom yang benar adalah total_bayar (bukan harga)
         $q_order = mysqli_query($conn, "SELECT COUNT(*) as total, SUM(total_bayar) as total_pengeluaran FROM pesanan WHERE username = '$user_escaped'");

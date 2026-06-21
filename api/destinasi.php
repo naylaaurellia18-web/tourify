@@ -7,13 +7,15 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // 2. Ambil koneksi dari folder api/ atau utama
-if (file_exists('api/koneksi.php')) {
-    include 'api/koneksi.php';
-} elseif (file_exists('koneksi.php')) {
-    include 'koneksi.php';
-} else {
-    die("File koneksi.php tidak ditemukan.");
-}
+$host     = "gateway01.ap-southeast-1.prod.alicloud.tidbcloud.com";
+$port     = 4000;
+$username = "3DA4d4bPMVCSuDy.root";
+$password = "mRSgOTH6qk79AieJ";
+$database = "tourify-db";
+$conn = mysqli_init();
+mysqli_ssl_set($conn, NULL, NULL, NULL, NULL, NULL);
+mysqli_real_connect($conn, $host, $username, $password, $database, $port, NULL, MYSQLI_CLIENT_SSL);
+mysqli_set_charset($conn, "utf8mb4");
 
 // Tangkap promo dari URL dan simpan ke session jika ada
 if (isset($_GET['kode'])) {
@@ -25,11 +27,11 @@ if (isset($_GET['kode'])) {
 }
 
 // Ambil data login user
-$nama_tampil = $_SESSION['user'] ?? $_SESSION['username'] ?? null;
+$nama_tampil = $_SESSION['nama_lengkap'] ?? $_SESSION['username'] ?? $_SESSION['user'] ?? null;
 $is_logged_in   = $_SESSION['login_user'] ?? false;
 
 if (!$nama_tampil || !$is_logged_in) {
-    header("Location: api/login.php");
+    header("Location: login.php");
     exit();
 }
 
@@ -399,7 +401,7 @@ $tahun_aktif = date('Y');
                         <span class="text-muted d-block" style="font-size: 0.75rem;">Status: Aktif</span>
                     </div>
                 </div>
-                <a href="logout.php" class="btn btn-logout text-decoration-none"><i class="bi bi-box-arrow-right me-1"></i> Keluar</a>
+                <a href="api/logout.php" class="btn btn-logout text-decoration-none"><i class="bi bi-box-arrow-right me-1"></i> Keluar</a>
             </div>
         </div>
 
