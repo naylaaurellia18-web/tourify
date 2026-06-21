@@ -6,6 +6,12 @@ if (session_status() === PHP_SESSION_NONE) {
 date_default_timezone_set('Asia/Jakarta');
 $tahun_aktif = date('Y');
 
+// JIKA SUDAH LOGIN SEBAGAI ADMIN: Alihkan otomatis ke panel admin
+if (!empty($_SESSION['admin_id'])) {
+    header("Location: ../admin.php");
+    exit;
+}
+
 // JIKA USER SUDAH LOGIN: Alihkan otomatis ke dashboard
 if ((isset($_SESSION['user']) || isset($_SESSION['username'])) && isset($_SESSION['login_user'])) {
     header("Location: ../dashboard.php");
@@ -24,31 +30,57 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $username_or_email = mysqli_real_escape_string($conn, trim($_POST['username']));
     $password = trim($_POST['password']);
 
-    // Cari user berdasarkan username atau email
-    $query = "SELECT * FROM users WHERE username = '$username_or_email' OR email = '$username_or_email' LIMIT 1";
-    $result = mysqli_query($conn, $query);
+    // --- 1. Cek dulu apakah username ini terdaftar sebagai ADMIN ---
+    // (Admin login pakai username saja, tidak lewat email, dan tidak butuh tabel users)
+    $query_admin  = "SELECT * FROM admin WHERE username = '$username_or_email' LIMIT 1";
+    $result_admin = mysqli_query($conn, $query_admin);
 
-    if ($result && mysqli_num_rows($result) > 0) {
-        $row = mysqli_fetch_assoc($result);
-        
-        // Cek kecocokan password dengan hash di database
-        if (password_verify($password, $row['password'])) {
-            // SET SESSION UNTUK DAHSBOARD
-            $_SESSION['id_user']      = $row['id'];
-            $_SESSION['username']     = $row['username']; 
-            $_SESSION['nama_lengkap']  = $row['nama_lengkap'];
-            $_SESSION['login_user']   = true; // Wajib diset TRUE agar lolos validasi dashboard.php
-            
-            // Redirect ke dashboard.php di folder utama
-            header("Location: ../dashboard.php");
+    if ($result_admin && mysqli_num_rows($result_admin) > 0) {
+        $admin = mysqli_fetch_assoc($result_admin);
+
+        if (password_verify($password, $admin['password'])) {
+            // Set session khusus admin
+            $_SESSION['admin_id']        = (int)$admin['id_admin'];
+            $_SESSION['admin_username']  = $admin['username'];
+            $_SESSION['admin_nama']      = $admin['nama_lengkap'];
+            $_SESSION['admin_role']      = $admin['role']; // 'super' atau 'destinasi'
+            $_SESSION['admin_destinasi'] = $admin['id_destinasi'] ? (int)$admin['id_destinasi'] : null;
+
+            mysqli_close($conn);
+            header("Location: ../admin.php");
             exit;
         } else {
             $error_msg = "Kata sandi yang kamu masukkan salah!";
+            mysqli_close($conn);
         }
     } else {
-        $error_msg = "Username atau Email tidak terdaftar dalam sistem.";
+        // --- 2. Bukan admin, lanjut cek sebagai USER biasa (alur asli) ---
+        // Cari user berdasarkan username atau email
+        $query = "SELECT * FROM users WHERE username = '$username_or_email' OR email = '$username_or_email' LIMIT 1";
+        $result = mysqli_query($conn, $query);
+
+        if ($result && mysqli_num_rows($result) > 0) {
+            $row = mysqli_fetch_assoc($result);
+
+            // Cek kecocokan password dengan hash di database
+            if (password_verify($password, $row['password'])) {
+                // SET SESSION UNTUK DAHSBOARD
+                $_SESSION['id_user']      = $row['id'];
+                $_SESSION['username']     = $row['username']; 
+                $_SESSION['nama_lengkap']  = $row['nama_lengkap'];
+                $_SESSION['login_user']   = true; // Wajib diset TRUE agar lolos validasi dashboard.php
+
+                // Redirect ke dashboard.php di folder utama
+                header("Location: ../dashboard.php");
+                exit;
+            } else {
+                $error_msg = "Kata sandi yang kamu masukkan salah!";
+            }
+        } else {
+            $error_msg = "Username atau Email tidak terdaftar dalam sistem.";
+        }
+        mysqli_close($conn);
     }
-    mysqli_close($conn);
 }
 ?>
 <!DOCTYPE html>

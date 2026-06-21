@@ -37,6 +37,7 @@ $metode_label = [
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
         :root { --primary:#f37021; --primary-gradient:linear-gradient(135deg,#f37021,#ff8c42); --text-dark:#1e293b; --text-muted:#64748b; --border:#e2e8f0; --bg:#f8fafc; }
         body { background:var(--bg); font-family:'Inter',sans-serif; color:var(--text-dark); margin:0; overflow-x:hidden; }
@@ -118,6 +119,11 @@ $metode_label = [
         .etiket-total .total-val { font-size:1.3rem;font-weight:800;color:var(--primary);font-family:'Plus Jakarta Sans',sans-serif; }
 
         .etiket-kode { text-align:center;background:#1e293b;color:white;border-radius:12px;padding:14px;letter-spacing:3px;font-family:monospace;font-size:1.1rem;font-weight:700;margin-bottom:20px; }
+
+        .etiket-qr-wrap { display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:20px; }
+        .etiket-qr-wrap #et_qrcode { padding:12px;background:white;border:2px solid var(--border);border-radius:14px;display:inline-block; }
+        .etiket-qr-wrap #et_qrcode img, .etiket-qr-wrap #et_qrcode canvas { display:block;border-radius:4px; }
+        .etiket-qr-hint { font-size:0.74rem;color:var(--text-muted);text-align:center; }
 
         .etiket-status { display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;background:#f0fdf4;border-radius:10px;color:#16a34a;font-weight:700;font-size:0.88rem;margin-bottom:24px; }
 
@@ -318,6 +324,12 @@ $metode_label = [
             <!-- Kode Tiket -->
             <div class="etiket-kode" id="et_kode">TRF-00000</div>
 
+            <!-- QR Code untuk verifikasi petugas -->
+            <div class="etiket-qr-wrap">
+                <div id="et_qrcode"></div>
+                <div class="etiket-qr-hint"><i class="bi bi-qr-code-scan me-1"></i>Tunjukkan QR ini untuk dipindai petugas</div>
+            </div>
+
             <!-- Status -->
             <div class="etiket-status">
                 <i class="bi bi-shield-fill-check fs-5"></i>
@@ -353,7 +365,9 @@ function bukaTiket(data) {
     document.getElementById('et_metode').textContent   = data.metode;
     document.getElementById('et_created').textContent  = data.created;
     document.getElementById('et_total').textContent    = data.total;
-    document.getElementById('et_kode').textContent     = '#TRF-' + String(data.id).padStart(5,'0');
+
+    const kodeTiket = 'TRF-' + String(data.id).padStart(5,'0');
+    document.getElementById('et_kode').textContent     = '#' + kodeTiket;
 
     const promoEl = document.getElementById('et_promo');
     if (data.kode_promo) {
@@ -362,6 +376,19 @@ function bukaTiket(data) {
     } else {
         promoEl.style.display = 'none';
     }
+
+    // Generate ulang QR code setiap kali tiket dibuka (kosongkan dulu wadahnya)
+    const qrEl = document.getElementById('et_qrcode');
+    qrEl.innerHTML = '';
+    const qrData = 'TOURIFY|' + kodeTiket + '|' + data.wisata + '|' + data.pemesan + '|' + data.jumlah + '|' + data.tanggal;
+    new QRCode(qrEl, {
+        text: qrData,
+        width: 160,
+        height: 160,
+        colorDark: '#1e293b',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.H
+    });
 
     document.getElementById('tiketModal').classList.add('open');
     document.body.style.overflow = 'hidden';

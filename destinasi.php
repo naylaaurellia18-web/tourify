@@ -40,11 +40,11 @@ $dari_db  = ($res_dest && mysqli_num_rows($res_dest) > 0);
 
 // Data statis dari file referensi Anda sebagai fallback (jika database kosong)
 $destinasi_statis = [
-    ['nama'=>'Saloka Theme Park',          'lokasi'=>'Semarang',   'deskripsi'=>'Taman rekreasi keluarga terbesar di Jawa Tengah dengan berbagai wahana seru.',                     'harga'=>120000, 'gambar'=>'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQRZqPWsn-DyTw7qSrAjenFvPuQsrCvnKjMsw&s'],
-    ['nama'=>'Candi Borobudur',             'lokasi'=>'Magelang',   'deskripsi'=>'Candi Buddha terbesar di dunia, warisan budaya UNESCO.',                                          'harga'=>300000, 'gambar'=>'https://cdn1-production-images-kly.akamaized.net/KRV05_LNI_woM1xsLULUlF-KGZE=/1200x675/smart/filters:quality(75):strip_icc():format(jpeg)/kly-media-production/medias/3023951/original/083764400_1579164554-indonesia-1098328_1920.jpg'],
-    ['nama'=>'Taman Nasional Karimunjawa', 'lokasi'=>'Jepara',     'deskripsi'=>'Pesona wisata bahari terindah dengan keindahan bawah laut dan pantai pasir putih.',             'harga'=>200000, 'gambar'=>'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQsIs1YIW602fv8a-S9qUgwZWFd8_qyp7X5lQ&s'],
-    ['nama'=>'Rasamadu (The Heritage Palace)', 'lokasi'=>'Sukoharjo','deskripsi'=>'Bekas pabrik gula abad ke-19 yang diubah menjadi tempat wisata bergaya Eropa.',               'harga'=>80000,  'gambar'=>'https://s-light.tiket.photos/t/01E25EBZS3W0FY9GTG6C42E1SE/rsfit19201280gsm/events/2026/03/25/a31c0d96-04af-41a3-bf0d-e6e1dd47f723-1774431846858-13592ce40930746e3e717f6e07e07d04.jpg'],
-    ['nama'=>'Solo Safari',                 'lokasi'=>'Surakarta',  'deskripsi'=>'Kawasan kebun binatang modern dengan konsep edukasi satwa yang interaktif.',                    'harga'=>60000,  'gambar'=>'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSuZgalMALjLh8eeh4WdWlGIMKLeZ4RPPWGIg&s'],
+    ['nama'=>'Saloka Theme Park',          'lokasi'=>'Semarang',   'deskripsi'=>'Taman rekreasi keluarga terbesar di Jawa Tengah dengan berbagai wahana seru.',                     'harga'=>120000, 'stok'=>50, 'gambar'=>'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQRZqPWsn-DyTw7qSrAjenFvPuQsrCvnKjMsw&s'],
+    ['nama'=>'Candi Borobudur',             'lokasi'=>'Magelang',   'deskripsi'=>'Candi Buddha terbesar di dunia, warisan budaya UNESCO.',                                          'harga'=>300000, 'stok'=>80, 'gambar'=>'https://cdn1-production-images-kly.akamaized.net/KRV05_LNI_woM1xsLULUlF-KGZE=/1200x675/smart/filters:quality(75):strip_icc():format(jpeg)/kly-media-production/medias/3023951/original/083764400_1579164554-indonesia-1098328_1920.jpg'],
+    ['nama'=>'Taman Nasional Karimunjawa', 'lokasi'=>'Jepara',     'deskripsi'=>'Pesona wisata bahari terindah dengan keindahan bawah laut dan pantai pasir putih.',             'harga'=>200000, 'stok'=>40, 'gambar'=>'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQsIs1YIW602fv8a-S9qUgwZWFd8_qyp7X5lQ&s'],
+    ['nama'=>'Rasamadu (The Heritage Palace)', 'lokasi'=>'Sukoharjo','deskripsi'=>'Bekas pabrik gula abad ke-19 yang diubah menjadi tempat wisata bergaya Eropa.',               'harga'=>80000,  'stok'=>30, 'gambar'=>'https://s-light.tiket.photos/t/01E25EBZS3W0FY9GTG6C42E1SE/rsfit19201280gsm/events/2026/03/25/a31c0d96-04af-41a3-bf0d-e6e1dd47f723-1774431846858-13592ce40930746e3e717f6e07e07d04.jpg'],
+    ['nama'=>'Solo Safari',                 'lokasi'=>'Surakarta',  'deskripsi'=>'Kawasan kebun binatang modern dengan konsep edukasi satwa yang interaktif.',                    'harga'=>60000,  'stok'=>25, 'gambar'=>'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSuZgalMALjLh8eeh4WdWlGIMKLeZ4RPPWGIg&s'],
 ];
 
 date_default_timezone_set('Asia/Jakarta');
@@ -306,6 +306,26 @@ $tahun_aktif = date('Y');
             color: var(--primary);
         }
 
+        .stok-info {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 6px;
+        }
+
+        .btn-pesan:disabled, .btn-pesan.disabled {
+            background: #e2e8f0;
+            color: #94a3b8;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+        .btn-pesan:disabled:hover, .btn-pesan.disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
         .btn-pesan {
             background: var(--primary-gradient);
             color: white;
@@ -408,6 +428,15 @@ $tahun_aktif = date('Y');
                     $desc     = htmlspecialchars($row['deskripsi'] ?? '');
                     $harga    = (int)$row['harga'];
                     $gambar   = !empty($row['gambar']) ? htmlspecialchars($row['gambar']) : 'https://via.placeholder.com/400x200?text=' . urlencode($nama);
+                    $stok     = (int)($row['stok_tiket'] ?? 0);
+
+                    if ($stok <= 0) {
+                        $stok_bg = '#fef2f2'; $stok_color = '#ef4444'; $stok_label = 'Tiket Habis';
+                    } elseif ($stok < 10) {
+                        $stok_bg = '#fffbeb'; $stok_color = '#d97706'; $stok_label = $stok . ' tiket tersisa';
+                    } else {
+                        $stok_bg = '#f0fdf4'; $stok_color = '#16a34a'; $stok_label = $stok . ' tiket tersisa';
+                    }
                     ?>
                     <div class="col-md-6 col-lg-4">
                         <div class="destinasi-card">
@@ -422,10 +451,17 @@ $tahun_aktif = date('Y');
                                     <div>
                                         <div class="price-label">Harga Tiket</div>
                                         <div class="price-value">Rp <?= number_format($harga, 0, ',', '.'); ?></div>
+                                        <span class="stok-info" style="background:<?= $stok_bg ?>;color:<?= $stok_color ?>;"><?= $stok_label ?></span>
                                     </div>
+                                    <?php if ($stok <= 0): ?>
+                                    <button class="btn btn-pesan px-4 disabled" disabled title="Tiket sedang habis">
+                                        Tiket Habis
+                                    </button>
+                                    <?php else: ?>
                                     <button class="btn btn-pesan px-4" onclick="pesanTiket('<?= addslashes($nama); ?>', '<?= $harga; ?>')">
                                         Pesan Tiket
                                     </button>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>
@@ -435,6 +471,14 @@ $tahun_aktif = date('Y');
             } else {
                 // TAMPILAN DATA FALLBACK JAWA TENGAH JIKA DATABASE KOSONG
                 foreach ($destinasi_statis as $item) {
+                    $stok = (int)($item['stok'] ?? 0);
+                    if ($stok <= 0) {
+                        $stok_bg = '#fef2f2'; $stok_color = '#ef4444'; $stok_label = 'Tiket Habis';
+                    } elseif ($stok < 10) {
+                        $stok_bg = '#fffbeb'; $stok_color = '#d97706'; $stok_label = $stok . ' tiket tersisa';
+                    } else {
+                        $stok_bg = '#f0fdf4'; $stok_color = '#16a34a'; $stok_label = $stok . ' tiket tersisa';
+                    }
                     ?>
                     <div class="col-md-6 col-lg-4">
                         <div class="destinasi-card">
@@ -449,10 +493,17 @@ $tahun_aktif = date('Y');
                                     <div>
                                         <div class="price-label">Harga Tiket</div>
                                         <div class="price-value">Rp <?= number_format($item['harga'], 0, ',', '.'); ?></div>
+                                        <span class="stok-info" style="background:<?= $stok_bg ?>;color:<?= $stok_color ?>;"><?= $stok_label ?></span>
                                     </div>
+                                    <?php if ($stok <= 0): ?>
+                                    <button class="btn btn-pesan px-4 disabled" disabled title="Tiket sedang habis">
+                                        Tiket Habis
+                                    </button>
+                                    <?php else: ?>
                                     <button class="btn btn-pesan px-4" onclick="pesanTiket('<?= addslashes($item['nama']); ?>', '<?= $item['harga']; ?>')">
                                         Pesan Tiket
                                     </button>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>

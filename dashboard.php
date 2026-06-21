@@ -59,11 +59,13 @@ if (isset($conn)) {
         }
 
         // Query grafik: jumlah tiket per bulan di tahun ini
+        // Dipakai kolom `tanggal` (tanggal KUNJUNGAN), bukan created_at (tanggal pemesanan),
+        // karena grafik ini menunjukkan tren liburan/kunjungan, bukan kapan order dibuat.
         $q_grafik = mysqli_query($conn, "
-            SELECT MONTH(created_at) as bulan, COUNT(*) as jumlah 
+            SELECT MONTH(tanggal) as bulan, COUNT(*) as jumlah 
             FROM pesanan 
-            WHERE username = '$user_escaped' AND YEAR(created_at) = YEAR(NOW())
-            GROUP BY MONTH(created_at)
+            WHERE username = '$user_escaped' AND YEAR(tanggal) = YEAR(NOW())
+            GROUP BY MONTH(tanggal)
         ");
         if ($q_grafik) {
             while ($row_g = mysqli_fetch_assoc($q_grafik)) {

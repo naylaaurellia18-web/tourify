@@ -29,6 +29,49 @@ if (!empty($kode_promo) && isset($conn)) {
     } else { $kode_promo = ''; $total_bayar = $subtotal; }
 }
 
+// --- Cek stok tiket sebelum memproses pesanan ---
+$stok_tersedia  = null;
+$id_destinasi   = null;
+$qd = mysqli_query($conn, "SELECT id_destinasi, stok_tiket FROM destinasi WHERE nama_destinasi = '$wisata' LIMIT 1");
+if ($qd && mysqli_num_rows($qd) > 0) {
+    $rowd          = mysqli_fetch_assoc($qd);
+    $id_destinasi  = (int)$rowd['id_destinasi'];
+    $stok_tersedia = (int)$rowd['stok_tiket'];
+}
+
+// Kalau destinasi ditemukan di database dan stoknya tidak cukup, hentikan transaksi
+if ($id_destinasi !== null && $stok_tersedia < $jumlah) {
+    ?>
+    <!DOCTYPE html>
+    <html lang="id">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Stok Tidak Cukup | Tourify</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+        <style>
+            body { background:linear-gradient(135deg,#fff7ed,#f8fafc); font-family:'Inter',sans-serif; min-height:100vh; display:flex; align-items:center; justify-content:center; margin:0; }
+            .box { background:white; border-radius:24px; box-shadow:0 20px 60px rgba(0,0,0,0.08); max-width:440px; padding:40px; text-align:center; }
+            .icon { width:72px;height:72px;background:#fef2f2;color:#ef4444;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 20px; }
+            .btn-back { background:linear-gradient(135deg,#f37021,#ff8c42);border:none;color:white;font-weight:700;padding:12px 24px;border-radius:12px;text-decoration:none;display:inline-block;margin-top:10px; }
+            .btn-back:hover { opacity:0.9;color:white; }
+        </style>
+    </head>
+    <body>
+        <div class="box">
+            <div class="icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+            <h5 class="fw-bold mb-2">Stok Tiket Tidak Cukup</h5>
+            <p class="text-muted small mb-1">Destinasi <strong><?= htmlspecialchars($wisata) ?></strong> hanya tersisa <strong><?= $stok_tersedia ?> tiket</strong>, sedangkan kamu memesan <strong><?= $jumlah ?> tiket</strong>.</p>
+            <p class="text-muted small">Silakan kurangi jumlah tiket atau pilih destinasi lain.</p>
+            <a href="destinasi.php" class="btn-back"><i class="bi bi-arrow-left me-1"></i>Kembali ke Daftar Destinasi</a>
+        </div>
+    </body>
+    </html>
+    <?php
+    exit();
+}
+
 // Simpan ke database
 $sql = "INSERT INTO pesanan (username, nama_pemesan, wisata, jumlah, tanggal, metode_pembayaran, kode_promo, total_bayar)
         VALUES ('$username','$nama_pemesan','$wisata',$jumlah,'$tanggal','$metode','$kode_promo',$total_bayar)";
@@ -36,6 +79,12 @@ $sql = "INSERT INTO pesanan (username, nama_pemesan, wisata, jumlah, tanggal, me
 $id_pesanan = 0;
 if (mysqli_query($conn, $sql)) {
     $id_pesanan = mysqli_insert_id($conn);
+
+    // Kurangi stok tiket destinasi terkait, kalau ditemukan di database
+    // (klausa AND stok_tiket >= jumlah mencegah stok jadi negatif jika ada request bersamaan)
+    if ($id_destinasi !== null) {
+        mysqli_query($conn, "UPDATE destinasi SET stok_tiket = stok_tiket - $jumlah WHERE id_destinasi = $id_destinasi AND stok_tiket >= $jumlah");
+    }
 } else {
     die("Error: " . mysqli_error($conn));
 }
