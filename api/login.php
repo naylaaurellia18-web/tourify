@@ -219,7 +219,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             </div>
         <?php endif; ?>
 
-        <form action="/api/login.php" method="POST">
+        <form action="/login.php" method="POST">
             <div class="mb-3">
                 <label class="form-label small fw-bold text-secondary">Username atau Email</label>
                 <div class="input-group">
