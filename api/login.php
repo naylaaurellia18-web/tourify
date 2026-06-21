@@ -27,9 +27,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     mysqli_real_connect($conn, "gateway01.ap-southeast-1.prod.alicloud.tidbcloud.com",
         "3DA4d4bPMVCSuDy.root", "mRSgOTH6qk79AieJ", "tourify-db", 4000, NULL, MYSQLI_CLIENT_SSL);
     mysqli_set_charset($conn, "utf8mb4");
-    if (mysqli_connect_errno()) {
-        die("Koneksi ke database gagal: " . mysqli_connect_error());
-    }
 
     $username_or_email = mysqli_real_escape_string($conn, trim($_POST['username']));
     $password = trim($_POST['password']);
@@ -200,7 +197,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 <div class="login-container">
     <div class="text-center mb-4">
-        <a class="nav-brand-box" href="../index.php">
+        <a class="nav-brand-box" href="/">
             <div class="logo-icon"><i class="bi bi-compass-fill"></i></div>
             <span class="brand-title">Tour<span style="color: var(--primary);">ify</span></span>
         </a>
@@ -218,7 +215,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             </div>
         <?php endif; ?>
 
-        <form action="login.php" method="POST">
+        <form action="/api/login.php" method="POST">
             <div class="mb-3">
                 <label class="form-label small fw-bold text-secondary">Username atau Email</label>
                 <div class="input-group">
@@ -243,7 +240,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         <div class="text-center mt-4">
             <p class="small text-muted mb-0">Belum punya akun Tourify? <br>
-                <a href="register.php" class="fw-bold text-decoration-none" style="color: var(--primary);">Daftar Akun Baru</a>
+                <a href="/register.php" class="fw-bold text-decoration-none" style="color: var(--primary);">Daftar Akun Baru</a>
             </p>
         </div>
     </div>
