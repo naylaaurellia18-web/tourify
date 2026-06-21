@@ -22,7 +22,7 @@ function getDBConn() {
     $port     = 4000;
     $username = "3DA4d4bPMVCSuDy.root";
     $password = "mRSgOTH6qk79AieJ";
-    $database = "tourify";
+    $database = "tourify-db";
 
     $conn = mysqli_init();
     mysqli_ssl_set($conn, NULL, NULL, NULL, NULL, NULL);

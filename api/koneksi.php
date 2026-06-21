@@ -3,7 +3,7 @@ $host     = "gateway01.ap-southeast-1.prod.alicloud.tidbcloud.com";
 $port     = 4000;
 $username = "3DA4d4bPMVCSuDy.root";
 $password = "mRSgOTH6qk79AieJ";
-$database = "tourify"; // ganti dari "sys" ke nama database kamu
+$database = "tourify-db"; // ganti dari "sys" ke nama database kamu
 
 $conn = mysqli_init();
 
