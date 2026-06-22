@@ -72,13 +72,18 @@ if ($id_destinasi !== null && $stok_tersedia < $jumlah) {
     exit();
 }
 
+// Generate ID manual karena TiDB Serverless tidak support AUTO_INCREMENT
+$r_max = mysqli_query($conn, "SELECT COALESCE(MAX(id), 0) AS max_id FROM pesanan");
+$max_id = $r_max ? (int)mysqli_fetch_assoc($r_max)['max_id'] : 0;
+$new_id = $max_id > 0 ? $max_id + 1 : (int)(microtime(true) * 1000);
+
 // Simpan ke database
-$sql = "INSERT INTO pesanan (username, nama_pemesan, wisata, jumlah, tanggal, metode_pembayaran, kode_promo, total_bayar)
-        VALUES ('$username','$nama_pemesan','$wisata',$jumlah,'$tanggal','$metode','$kode_promo',$total_bayar)";
+$sql = "INSERT INTO pesanan (id, username, nama_pemesan, wisata, jumlah, tanggal, metode_pembayaran, kode_promo, total_bayar)
+        VALUES ($new_id,'$username','$nama_pemesan','$wisata',$jumlah,'$tanggal','$metode','$kode_promo',$total_bayar)";
 
 $id_pesanan = 0;
 if (mysqli_query($conn, $sql)) {
-    $id_pesanan = mysqli_insert_id($conn);
+    $id_pesanan = $new_id;
 
     // Kurangi stok tiket destinasi terkait, kalau ditemukan di database
     // (klausa AND stok_tiket >= jumlah mencegah stok jadi negatif jika ada request bersamaan)
