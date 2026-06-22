@@ -5,12 +5,8 @@
 //  panel mini admin (edit data, hanya untuk yang login sebagai admin).
 //  Data utama disinkronkan ke tabel `destinasi` (kolom id_destinasi).
 // ============================================================
+include __DIR__ . '/session_db.php';
 
-// Fix session untuk Vercel serverless
-ini_set('session.save_path', '/tmp');
-ini_set('session.cookie_samesite', 'None');
-ini_set('session.cookie_secure', '1');
-if (session_status() === PHP_SESSION_NONE) session_start();
 
 include __DIR__ . '/koneksi.php';
 

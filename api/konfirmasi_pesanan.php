@@ -1,9 +1,6 @@
 <?php
 // Fix session untuk Vercel serverless
-ini_set('session.save_path', '/tmp');
-ini_set('session.cookie_samesite', 'None');
-ini_set('session.cookie_secure', '1');
-if (session_status() === PHP_SESSION_NONE) session_start();
+include __DIR__ . '/session_db.php';
 
 include __DIR__ . '/koneksi.php';
 

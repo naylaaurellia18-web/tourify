@@ -1,11 +1,6 @@
 <?php
 // login.php
-ini_set('session.save_path', '/tmp');
-ini_set('session.cookie_samesite', 'None');
-ini_set('session.cookie_secure', '1');
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+include __DIR__ . '/session_db.php';
 date_default_timezone_set('Asia/Jakarta');
 $tahun_aktif = date('Y');
 
