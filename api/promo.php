@@ -196,8 +196,9 @@ $tahun_aktif = date('Y');
             <li><a href="/api/dashboard.php"><i class="bi bi-grid-1x2-fill"></i> Ringkasan</a></li>
             <li><a href="/api/destinasi.php"><i class="bi bi-ticket-perforated-fill"></i> Sistem Tiket</a></li>
             <li class="active"><a href="/api/promo.php"><i class="bi bi-tags-fill"></i> Promo Eksklusif</a></li>
-            <li><a href="/api/dashboard.php?page=bps_stat"><i class="bi bi-bar-chart-line-fill"></i> Statistik BPS</a></li>
+            <li><a href="/api/dashboard.php?page=bps"><i class="bi bi-bar-chart-line-fill"></i> Statistik BPS</a></li>
             <li><a href="/api/riwayat_pesanan.php"><i class="bi bi-clock-history"></i> Riwayat Pesanan</a></li>
+            <li><a href="/api/profil.php"><i class="bi bi-person-circle"></i> Profil Saya</a></li>
         </ul>
     </nav>
 

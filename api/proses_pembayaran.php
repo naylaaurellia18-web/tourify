@@ -78,8 +78,8 @@ $max_id = $r_max ? (int)mysqli_fetch_assoc($r_max)['max_id'] : 0;
 $new_id = $max_id > 0 ? $max_id + 1 : (int)(microtime(true) * 1000);
 
 // Simpan ke database
-$sql = "INSERT INTO pesanan (id, username, nama_pemesan, wisata, jumlah, tanggal, metode_pembayaran, kode_promo, total_bayar)
-        VALUES ($new_id,'$username','$nama_pemesan','$wisata',$jumlah,'$tanggal','$metode','$kode_promo',$total_bayar)";
+$sql = "INSERT INTO pesanan (id, username, nama_pemesan, wisata, jumlah, tanggal, metode_pembayaran, kode_promo, total_bayar, status)
+        VALUES ($new_id,'$username','$nama_pemesan','$wisata',$jumlah,'$tanggal','$metode','$kode_promo',$total_bayar,'aktif')";
 
 $id_pesanan = 0;
 if (mysqli_query($conn, $sql)) {

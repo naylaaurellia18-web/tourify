@@ -28,6 +28,100 @@ mysqli_set_charset($conn, "utf8mb4");
 // Cek halaman aktif di konten utama via parameter URL
 $page = $_GET['page'] ?? 'ringkasan';
 
+// --- Ambil cuaca real-time dari Open-Meteo (gratis, tanpa API key) ---
+// Hanya dijalankan untuk halaman ringkasan (bukan halaman BPS) supaya tidak fetch sia-sia.
+// Pakai curl_multi supaya ke-4 lokasi di-fetch PARALEL (bukan satu-satu),
+// penting di Vercel serverless yang punya batas waktu eksekusi ketat.
+function ambilCuacaBanyakLokasi($daftarLokasi) {
+    $mh = curl_multi_init();
+    $handles = [];
+
+    foreach ($daftarLokasi as $i => $lok) {
+        $url = "https://api.open-meteo.com/v1/forecast?latitude={$lok['lat']}&longitude={$lok['lon']}&current=temperature_2m,weather_code&timezone=Asia%2FJakarta";
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 4);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3);
+        curl_multi_add_handle($mh, $ch);
+        $handles[$i] = $ch;
+    }
+
+    $running = null;
+    do {
+        curl_multi_exec($mh, $running);
+        curl_multi_select($mh);
+    } while ($running > 0);
+
+    $hasil = [];
+    foreach ($handles as $i => $ch) {
+        $resp = curl_multi_getcontent($ch);
+        $data = $resp ? json_decode($resp, true) : null;
+        if ($data && isset($data['current'])) {
+            $hasil[$i] = [
+                'suhu' => round($data['current']['temperature_2m']),
+                'kode' => (int)$data['current']['weather_code'],
+            ];
+        } else {
+            $hasil[$i] = null;
+        }
+        curl_multi_remove_handle($mh, $ch);
+        curl_close($ch);
+    }
+    curl_multi_close($mh);
+
+    return $hasil;
+}
+
+// Mapping WMO weather code (standar Open-Meteo) -> label & ikon Bootstrap Icons
+function labelCuaca($kode) {
+    if ($kode === 0)                 return ['Cerah', 'bi-sun-fill', 'text-warning'];
+    if (in_array($kode, [1,2]))      return ['Cerah Berawan', 'bi-cloud-sun-fill', 'text-warning'];
+    if ($kode === 3)                 return ['Berawan', 'bi-cloud-fill', 'text-secondary'];
+    if (in_array($kode, [45,48]))    return ['Berkabut', 'bi-cloud-haze-fill', 'text-secondary'];
+    if (in_array($kode, [51,53,55])) return ['Gerimis', 'bi-cloud-drizzle-fill', 'text-primary'];
+    if (in_array($kode, [61,63,65])) return ['Hujan', 'bi-cloud-rain-fill', 'text-primary'];
+    if (in_array($kode, [80,81,82])) return ['Hujan Deras', 'bi-cloud-rain-heavy-fill', 'text-primary'];
+    if (in_array($kode, [95,96,99])) return ['Badai Petir', 'bi-cloud-lightning-rain-fill', 'text-danger'];
+    return ['Berawan', 'bi-cloud-fill', 'text-secondary'];
+}
+
+$lokasi_cuaca = [
+    ['nama' => 'Saloka Theme Park (Semarang)',         'lat' => -7.0051, 'lon' => 110.3650],
+    ['nama' => 'Candi Borobudur (Magelang)',            'lat' => -7.6079, 'lon' => 110.2038],
+    ['nama' => 'Karimunjawa (Jepara)',                  'lat' => -5.8167, 'lon' => 110.4667],
+    ['nama' => 'Solo Safari & Heritage (Surakarta)',    'lat' => -7.5755, 'lon' => 110.8243],
+];
+
+$data_cuaca = [];
+if ($page !== 'bps') {
+    $hasil_cuaca = function_exists('curl_multi_init')
+        ? ambilCuacaBanyakLokasi($lokasi_cuaca)
+        : array_fill(0, count($lokasi_cuaca), null); // fallback kalau ekstensi curl tidak ada
+
+    foreach ($lokasi_cuaca as $i => $lok) {
+        $hasil = $hasil_cuaca[$i] ?? null;
+        if ($hasil !== null) {
+            [$label, $icon, $warna] = labelCuaca($hasil['kode']);
+            $data_cuaca[] = [
+                'nama'  => $lok['nama'],
+                'suhu'  => $hasil['suhu'],
+                'label' => $label,
+                'icon'  => $icon,
+                'warna' => $warna,
+            ];
+        } else {
+            // Fallback kalau Open-Meteo gagal diakses (timeout/down)
+            $data_cuaca[] = [
+                'nama'  => $lok['nama'],
+                'suhu'  => null,
+                'label' => 'Data tidak tersedia',
+                'icon'  => 'bi-exclamation-circle',
+                'warna' => 'text-muted',
+            ];
+        }
+    }
+}
+
 // Setel angka default ke 0
 $total_destinasi = 0; 
 $total_voucher = 0;   
@@ -302,6 +396,7 @@ $tahun_aktif = date('Y');
             <li><a href="/api/promo.php"><i class="bi bi-tags-fill"></i> Promo Eksklusif</a></li>
             <li class="<?= $page === 'bps' ? 'active' : '' ?>"><a href="/api/dashboard.php?page=bps"><i class="bi bi-bar-chart-line-fill"></i> Statistik BPS</a></li>
             <li><a href="/api/riwayat_pesanan.php"><i class="bi bi-clock-history"></i> Riwayat Pesanan</a></li>
+            <li><a href="/api/profil.php"><i class="bi bi-person-circle"></i> Profil Saya</a></li>
         </ul>
     </nav>
 
@@ -469,25 +564,18 @@ $tahun_aktif = date('Y');
                 <div class="col-lg-5">
                     <div class="card info-card">
                         <h5 class="fw-bold text-dark mb-1">Prakiraan Cuaca Destinasi ⛅</h5>
-                        <p class="text-muted small mb-3">Kondisi cuaca berkala di area sekitar Anda dan lokasi objek wisata utama.</p>
-                        
+                        <p class="text-muted small mb-3">Kondisi cuaca real-time di lokasi objek wisata utama (data: Open-Meteo).</p>
+
                         <div class="d-flex flex-column">
-                            <div class="weather-row">
-                                <span class="fw-semibold small"><i class="bi bi-geo-alt-fill text-primary me-1"></i> Area Madiun & Caruban</span>
-                                <span class="weather-badge text-warning"><i class="bi bi-sun-fill me-1"></i> Cerah Berawan 31°C</span>
+                            <?php foreach ($data_cuaca as $i => $cw): ?>
+                            <div class="weather-row" <?= $i === count($data_cuaca) - 1 ? 'style="margin-bottom:0;"' : '' ?>>
+                                <span class="fw-semibold small"><i class="bi bi-geo-alt-fill text-danger me-1"></i> <?= htmlspecialchars($cw['nama']) ?></span>
+                                <span class="weather-badge <?= $cw['warna'] ?>">
+                                    <i class="bi <?= $cw['icon'] ?> me-1"></i>
+                                    <?= htmlspecialchars($cw['label']) ?><?= $cw['suhu'] !== null ? ' ' . $cw['suhu'] . '°C' : '' ?>
+                                </span>
                             </div>
-                            <div class="weather-row">
-                                <span class="fw-semibold small"><i class="bi bi-geo-alt-fill text-danger me-1"></i> Borobudur (Magelang)</span>
-                                <span class="weather-badge text-secondary"><i class="bi bi-cloud-sun me-1"></i> Berawan Sejuk 26°C</span>
-                            </div>
-                            <div class="weather-row">
-                                <span class="fw-semibold small"><i class="bi bi-geo-alt-fill text-danger me-1"></i> Tugu & Kota Lama (Semarang)</span>
-                                <span class="weather-badge text-primary"><i class="bi bi-cloud-rain me-1"></i> Hujan Ringan 28°C</span>
-                            </div>
-                            <div class="weather-row" style="margin-bottom:0;">
-                                <span class="fw-semibold small"><i class="bi bi-geo-alt-fill text-danger me-1"></i> Keraton & Safari (Surakarta)</span>
-                                <span class="weather-badge text-warning"><i class="bi bi-sun-fill me-1"></i> Cerah 30°C</span>
-                            </div>
+                            <?php endforeach; ?>
                         </div>
                     </div>
                 </div>

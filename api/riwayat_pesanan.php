@@ -66,6 +66,9 @@ $metode_label = [
         .empty-state-icon { font-size:3.5rem;color:var(--text-muted);opacity:0.3;margin-bottom:15px; }
         .badge-status { padding:6px 12px;border-radius:8px;font-weight:600;font-size:0.78rem; }
         .btn-cetak { background:var(--primary-gradient);border:none;color:white;border-radius:8px;padding:7px 14px;font-size:0.8rem;font-weight:700;cursor:pointer;transition:0.2s; }
+        .btn-batal { background:#fff;border:1.5px solid #fca5a5;color:#ef4444;border-radius:8px;padding:7px 14px;font-size:0.8rem;font-weight:700;cursor:pointer;transition:0.2s; }
+        .btn-batal:hover { background:#ef4444;color:#fff;border-color:#ef4444; }
+        .btn-batal:disabled { opacity:0.6;cursor:not-allowed; }
         .btn-cetak:hover { opacity:0.85;transform:translateY(-1px); }
 
         /* ===== MODAL E-TIKET ===== */
@@ -160,8 +163,9 @@ $metode_label = [
             <li><a href="/api/dashboard.php"><i class="bi bi-grid-1x2-fill"></i> Ringkasan</a></li>
             <li><a href="/api/destinasi.php"><i class="bi bi-ticket-perforated-fill"></i> Sistem Tiket</a></li>
             <li><a href="/api/promo.php"><i class="bi bi-tags-fill"></i> Promo Eksklusif</a></li>
-            <li><a href="/api/dashboard.php?page=bps_stat"><i class="bi bi-bar-chart-line-fill"></i> Statistik BPS</a></li>
+            <li><a href="/api/dashboard.php?page=bps"><i class="bi bi-bar-chart-line-fill"></i> Statistik BPS</a></li>
             <li class="active"><a href="/api/riwayat_pesanan.php"><i class="bi bi-clock-history"></i> Riwayat Pesanan</a></li>
+            <li><a href="/api/profil.php"><i class="bi bi-person-circle"></i> Profil Saya</a></li>
         </ul>
     </nav>
 
@@ -222,6 +226,9 @@ $metode_label = [
                     <tbody>
                         <?php $no=1; foreach ($riwayat_pesanan as $p):
                             $met = $metode_label[$p['metode_pembayaran']] ?? ['icon'=>'bi-credit-card','label'=>$p['metode_pembayaran'],'color'=>'#64748b'];
+                            $status_pesanan = $p['status'] ?? 'aktif';
+                            $sudah_lewat    = strtotime($p['tanggal']) < strtotime(date('Y-m-d'));
+                            $bisa_dibatalkan = ($status_pesanan === 'aktif' && !$sudah_lewat);
                         ?>
                         <tr>
                             <td class="text-muted"><?= $no++ ?></td>
@@ -236,24 +243,37 @@ $metode_label = [
                             </td>
                             <td class="fw-bold text-success">Rp <?= number_format($p['total_bayar'],0,',','.') ?></td>
                             <td class="text-center">
+                                <?php if ($status_pesanan === 'dibatalkan'): ?>
+                                <span class="badge-status" style="background:#fef2f2;color:#ef4444;">
+                                    <i class="bi bi-x-circle-fill me-1"></i> Dibatalkan
+                                </span>
+                                <?php else: ?>
                                 <span class="badge-status" style="background:#dcfce7;color:#16a34a;">
                                     <i class="bi bi-check-circle-fill me-1"></i> Aktif
                                 </span>
+                                <?php endif; ?>
                             </td>
                             <td class="text-center">
-                                <button class="btn-cetak" onclick='bukaTiket(<?= json_encode([
-                                    "id"      => $p["id"],
-                                    "wisata"  => $p["wisata"],
-                                    "pemesan" => $p["nama_pemesan"],
-                                    "tanggal" => date("d M Y", strtotime($p["tanggal"])),
-                                    "jumlah"  => $p["jumlah"],
-                                    "metode"  => $met["label"],
-                                    "kode_promo" => $p["kode_promo"],
-                                    "total"   => number_format($p["total_bayar"],0,",","."),
-                                    "created" => date("d M Y H:i", strtotime($p["created_at"] ?? "now")),
-                                ]) ?>)'>
-                                    <i class="bi bi-printer-fill me-1"></i> E-Tiket
-                                </button>
+                                <div class="d-flex gap-2 justify-content-center">
+                                    <button class="btn-cetak" onclick='bukaTiket(<?= json_encode([
+                                        "id"      => $p["id"],
+                                        "wisata"  => $p["wisata"],
+                                        "pemesan" => $p["nama_pemesan"],
+                                        "tanggal" => date("d M Y", strtotime($p["tanggal"])),
+                                        "jumlah"  => $p["jumlah"],
+                                        "metode"  => $met["label"],
+                                        "kode_promo" => $p["kode_promo"],
+                                        "total"   => number_format($p["total_bayar"],0,",","."),
+                                        "created" => date("d M Y H:i", strtotime($p["created_at"] ?? "now")),
+                                    ]) ?>)'>
+                                        <i class="bi bi-printer-fill me-1"></i> E-Tiket
+                                    </button>
+                                    <?php if ($bisa_dibatalkan): ?>
+                                    <button class="btn-batal" onclick="konfirmasiBatal(<?= (int)$p['id'] ?>, this)">
+                                        <i class="bi bi-x-circle me-1"></i> Batalkan
+                                    </button>
+                                    <?php endif; ?>
+                                </div>
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -404,6 +424,37 @@ function tutupJikaLuar(e) {
 }
 
 document.addEventListener('keydown', e => { if (e.key === 'Escape') tutupModal(); });
+
+function konfirmasiBatal(idPesanan, btnEl) {
+    if (!confirm('Yakin ingin membatalkan tiket ini? Stok tiket akan dikembalikan dan tindakan ini tidak dapat dibatalkan kembali.')) {
+        return;
+    }
+
+    btnEl.disabled = true;
+    btnEl.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Memproses...';
+
+    fetch('/api/batal_pesanan.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'id_pesanan=' + encodeURIComponent(idPesanan)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.sukses) {
+            alert(data.pesan);
+            window.location.reload();
+        } else {
+            alert('Gagal: ' + data.pesan);
+            btnEl.disabled = false;
+            btnEl.innerHTML = '<i class="bi bi-x-circle me-1"></i> Batalkan';
+        }
+    })
+    .catch(() => {
+        alert('Terjadi kesalahan koneksi. Silakan coba lagi.');
+        btnEl.disabled = false;
+        btnEl.innerHTML = '<i class="bi bi-x-circle me-1"></i> Batalkan';
+    });
+}
 </script>
 </body>
 </html>

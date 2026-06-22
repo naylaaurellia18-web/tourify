@@ -36,6 +36,18 @@ $db = $conn;
 $res_dest = mysqli_query($db, "SELECT * FROM destinasi ORDER BY id_destinasi ASC");
 $dari_db  = ($res_dest && mysqli_num_rows($res_dest) > 0);
 
+// Ambil rata-rata rating & jumlah ulasan per destinasi (untuk ditampilkan di kartu)
+$rating_map = [];
+$q_rating = mysqli_query($db, "SELECT id_destinasi, AVG(rating) AS rata, COUNT(*) AS jml FROM ulasan GROUP BY id_destinasi");
+if ($q_rating) {
+    while ($r = mysqli_fetch_assoc($q_rating)) {
+        $rating_map[(int)$r['id_destinasi']] = [
+            'rata' => round((float)$r['rata'], 1),
+            'jml'  => (int)$r['jml'],
+        ];
+    }
+}
+
 // Data statis dari file referensi Anda sebagai fallback (jika database kosong)
 $destinasi_statis = [
     ['nama'=>'Saloka Theme Park',          'lokasi'=>'Semarang',   'deskripsi'=>'Taman rekreasi keluarga terbesar di Jawa Tengah dengan berbagai wahana seru.',                     'harga'=>120000, 'stok'=>50, 'gambar'=>'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQRZqPWsn-DyTw7qSrAjenFvPuQsrCvnKjMsw&s'],
@@ -372,10 +384,13 @@ $tahun_aktif = date('Y');
                 <a href="/api/promo.php"><i class="bi bi-tags-fill"></i> Promo Eksklusif</a>
             </li>
             <li>
-                <a href="/api/dashboard.php?page=bps_stat"><i class="bi bi-graph-up-arrow"></i> Statistik BPS</a>
+                <a href="/api/dashboard.php?page=bps"><i class="bi bi-graph-up-arrow"></i> Statistik BPS</a>
             </li>
             <li>
                 <a href="/api/riwayat_pesanan.php"><i class="bi bi-clock-history"></i> Riwayat Pesanan</a>
+            </li>
+            <li>
+                <a href="/api/profil.php"><i class="bi bi-person-circle"></i> Profil Saya</a>
             </li>
         </ul>
     </nav>
@@ -427,6 +442,8 @@ $tahun_aktif = date('Y');
                     $harga    = (int)$row['harga'];
                     $gambar   = !empty($row['gambar']) ? htmlspecialchars($row['gambar']) : 'https://via.placeholder.com/400x200?text=' . urlencode($nama);
                     $stok     = (int)($row['stok_tiket'] ?? 0);
+                    $id_dest_ini = (int)$row['id_destinasi'];
+                    $info_rating = $rating_map[$id_dest_ini] ?? ['rata' => 0, 'jml' => 0];
 
                     if ($stok <= 0) {
                         $stok_bg = '#fef2f2'; $stok_color = '#ef4444'; $stok_label = 'Tiket Habis';
@@ -443,7 +460,17 @@ $tahun_aktif = date('Y');
                                 <img src="<?= $gambar; ?>" alt="<?= $nama; ?>" onerror="this.src='https://via.placeholder.com/400x200?text=Gambar+Tidak+Tersedia'">
                             </div>
                             <div class="card-body-custom">
-                                <h5 class="card-title"><?= $nama; ?></h5>
+                                <div class="d-flex justify-content-between align-items-start gap-2">
+                                    <h5 class="card-title mb-1"><?= $nama; ?></h5>
+                                </div>
+                                <div class="mb-2" style="font-size:0.85rem;">
+                                    <?php if ($info_rating['jml'] > 0): ?>
+                                        <span style="color:#f59e0b;font-weight:700;"><i class="bi bi-star-fill me-1"></i><?= $info_rating['rata'] ?></span>
+                                        <span class="text-muted">(<?= $info_rating['jml'] ?> ulasan)</span>
+                                    <?php else: ?>
+                                        <span class="text-muted"><i class="bi bi-star me-1"></i>Belum ada ulasan</span>
+                                    <?php endif; ?>
+                                </div>
                                 <p class="card-desc"><?= $desc; ?></p>
                                 <div class="price-box">
                                     <div>
