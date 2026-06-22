@@ -4,7 +4,25 @@
       "runtime": "vercel-php@0.7.2"
     }
   },
-  "rewrites": [
-    { "source": "/", "destination": "/api/index.php" }
+  "routes": [
+    { "src": "/", "dest": "/api/index.php" },
+    { "src": "/index.php", "dest": "/api/index.php" },
+    { "src": "/login.php", "dest": "/api/login.php" },
+    { "src": "/register.php", "dest": "/api/register.php" },
+    { "src": "/logout.php", "dest": "/api/logout.php" },
+    { "src": "/dashboard.php", "dest": "/api/dashboard.php" },
+    { "src": "/admin.php", "dest": "/api/admin.php" },
+    { "src": "/destinasi.php", "dest": "/api/destinasi.php" },
+    { "src": "/promo.php", "dest": "/api/promo.php" },
+    { "src": "/profil.php", "dest": "/api/profil.php" },
+    { "src": "/riwayat_pesanan.php", "dest": "/api/riwayat_pesanan.php" },
+    { "src": "/konfirmasi_pesanan.php", "dest": "/api/konfirmasi_pesanan.php" },
+    { "src": "/proses_pembayaran.php", "dest": "/api/proses_pembayaran.php" },
+    { "src": "/batal_pesanan.php", "dest": "/api/batal_pesanan.php" },
+    { "src": "/ulasan.php", "dest": "/api/ulasan.php" },
+    { "src": "/restock_tiket.php", "dest": "/api/restock_tiket.php" },
+    { "src": "/admin_export_pesanan.php", "dest": "/api/admin_export_pesanan.php" },
+    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/(.*)\\.php", "dest": "/api/$1.php" }
   ]
 }

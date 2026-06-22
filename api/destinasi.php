@@ -38,7 +38,8 @@ $dari_db  = ($res_dest && mysqli_num_rows($res_dest) > 0);
 
 // Ambil rata-rata rating & jumlah ulasan per destinasi (untuk ditampilkan di kartu)
 $rating_map = [];
-$q_rating = mysqli_query($db, "SELECT id_destinasi, AVG(rating) AS rata, COUNT(*) AS jml FROM ulasan GROUP BY id_destinasi");
+// Query ulasan dengan error handling (tabel mungkin belum ada)
+$q_rating = @@mysqli_query($db, "SELECT id_destinasi, AVG(rating) AS rata, COUNT(*) AS jml FROM ulasan GROUP BY id_destinasi");
 if ($q_rating) {
     while ($r = mysqli_fetch_assoc($q_rating)) {
         $rating_map[(int)$r['id_destinasi']] = [
