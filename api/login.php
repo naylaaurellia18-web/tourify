@@ -11,13 +11,13 @@ $tahun_aktif = date('Y');
 
 // JIKA SUDAH LOGIN SEBAGAI ADMIN: Alihkan otomatis ke panel admin
 if (!empty($_SESSION['admin_id'])) {
-    header("Location: /admin.php");
+    header("Location: /api/admin.php");
     exit;
 }
 
 // JIKA USER SUDAH LOGIN: Alihkan otomatis ke dashboard
 if ((isset($_SESSION['user']) || isset($_SESSION['username'])) && isset($_SESSION['login_user'])) {
-    header("Location: /dashboard.php");
+    header("Location: /api/dashboard.php");
     exit;
 }
 
@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['admin_destinasi'] = $admin['id_destinasi'] ? (int)$admin['id_destinasi'] : null;
 
             mysqli_close($conn);
-            header("Location: /admin.php");
+            header("Location: /api/admin.php");
             exit;
         } else {
             $error_msg = "Kata sandi yang kamu masukkan salah!";
@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $_SESSION['login_user']   = true; // Wajib diset TRUE agar lolos validasi dashboard.php
 
                 // Redirect ke dashboard.php di folder utama
-                header("Location: /dashboard.php");
+                header("Location: /api/dashboard.php");
                 exit;
             } else {
                 $error_msg = "Kata sandi yang kamu masukkan salah!";
@@ -218,7 +218,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             </div>
         <?php endif; ?>
 
-        <form action="/login.php" method="POST">
+        <form action="/api/login.php" method="POST">
             <div class="mb-3">
                 <label class="form-label small fw-bold text-secondary">Username atau Email</label>
                 <div class="input-group">
@@ -243,7 +243,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         <div class="text-center mt-4">
             <p class="small text-muted mb-0">Belum punya akun Tourify? <br>
-                <a href="/register.php" class="fw-bold text-decoration-none" style="color: var(--primary);">Daftar Akun Baru</a>
+                <a href="/api/register.php" class="fw-bold text-decoration-none" style="color: var(--primary);">Daftar Akun Baru</a>
             </p>
         </div>
     </div>

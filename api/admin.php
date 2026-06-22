@@ -12,7 +12,7 @@ mysqli_set_charset($conn, "utf8mb4");
 
 // --- Wajib login sebagai admin ---
 if (empty($_SESSION['admin_id'])) {
-    header("Location: /login.php");
+    header("Location: /api/login.php");
     exit();
 }
 
@@ -29,7 +29,7 @@ if ($admin_role === 'destinasi' && empty($admin_destinasi)) {
         <p>Akun admin <strong>" . htmlspecialchars($admin_nama) . "</strong> berperan sebagai 'destinasi' tapi tidak memiliki id_destinasi yang terhubung di database.</p>
         <p>Perbaiki dengan menjalankan query berikut di phpMyAdmin (sesuaikan id_destinasi dan username):</p>
         <code>UPDATE admin SET id_destinasi = 1 WHERE username = '" . htmlspecialchars($_SESSION['admin_username']) . "';</code>
-        <p style='margin-top:16px;'><a href='logout.php'>Logout</a> dan coba login ulang setelah diperbaiki.</p>
+        <p style='margin-top:16px;'><a href='/api/admin_logout.php'>Logout</a> dan coba login ulang setelah diperbaiki.</p>
     </div>";
     exit();
 }
@@ -110,7 +110,7 @@ $page_file_map = [
             <a href="?page=destinasi_detail&id=<?= $admin_destinasi ?>" class="nav-link <?= $page=='destinasi_detail'?'active':'' ?>">Destinasi Saya</a>
         <?php endif; ?>
 
-        <hr><a href="/logout.php" class="nav-link text-danger">Logout</a>
+        <hr><a href="/api/admin_logout.php" class="nav-link text-danger">Logout</a>
     </div>
     <div class="main">
         <?php 

@@ -1,5 +1,9 @@
 <?php
 // api/register.php
+// Fix session untuk Vercel serverless
+ini_set('session.save_path', '/tmp');
+ini_set('session.cookie_samesite', 'None');
+ini_set('session.cookie_secure', '1');
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -10,10 +14,22 @@ $error_msg = "";
 $success_msg = "";
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $conn = mysqli_connect("localhost", "root", "", "tourify");
-    if (!$conn) {
+    $conn = mysqli_init();
+    mysqli_ssl_set($conn, NULL, NULL, NULL, NULL, NULL);
+    $connected = mysqli_real_connect(
+        $conn,
+        "gateway01.ap-southeast-1.prod.alicloud.tidbcloud.com",
+        "3DA4d4bPMVCSuDy.root",
+        "mRSgOTH6qk79AieJ",
+        "tourify-db",
+        4000,
+        NULL,
+        MYSQLI_CLIENT_SSL
+    );
+    if (!$connected) {
         die("Koneksi database gagal: " . mysqli_connect_error());
     }
+    mysqli_set_charset($conn, "utf8mb4");
 
     $nama_lengkap = mysqli_real_escape_string($conn, trim($_POST['nama_lengkap']));
     $username = mysqli_real_escape_string($conn, trim($_POST['username']));
@@ -40,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $success_msg = "Akun Tourify berhasil dibuat! Mengalihkan ke halaman masuk...";
                 
                 // Mengalihkan secara otomatis ke login.php dalam waktu 2 detik
-                header("refresh:2;url=login.php");
+                header("refresh:2;url=/api/login.php");
             } else {
                 $error_msg = "Gagal mendaftar, coba lagi nanti. ID Error: " . mysqli_error($conn);
             }
@@ -162,7 +178,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 <div class="register-container">
     <div class="text-center mb-4">
-        <a class="nav-brand-box" href="../index.php">
+        <a class="nav-brand-box" href="/">
             <div class="logo-icon"><i class="fas fa-globe-asia"></i></div>
             <span class="brand-title">Tour<span style="color: var(--primary);">ify</span></span>
         </a>
@@ -186,7 +202,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             </div>
         <?php endif; ?>
 
-        <form action="register.php" method="POST">
+        <form action="/api/register.php" method="POST">
             <div class="mb-3">
                 <label class="form-label small fw-bold text-secondary">Nama Lengkap</label>
                 <div class="input-group">
@@ -234,7 +250,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         <div class="text-center mt-4">
             <p class="small text-muted mb-0">Sudah punya akun Tourify? <br>
-                <a href="login.php" class="fw-bold text-decoration-none" style="color: var(--primary);">Masuk ke Akun</a>
+                <a href="/api/login.php" class="fw-bold text-decoration-none" style="color: var(--primary);">Masuk ke Akun</a>
             </p>
         </div>
     </div>

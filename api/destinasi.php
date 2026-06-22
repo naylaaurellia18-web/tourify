@@ -9,7 +9,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // Cek login
 if (empty($_SESSION['login_user'])) {
-    header("Location: /login.php");
+    header("Location: /api/login.php");
     exit;
 }
 
@@ -360,7 +360,7 @@ $tahun_aktif = date('Y');
     <!-- Sidebar Kiri -->
     <nav id="sidebar">
         <div class="sidebar-header">
-            <a class="nav-brand-box" href="/dashboard.php">
+            <a class="nav-brand-box" href="/api/dashboard.php">
                 <div class="logo-icon"><i class="bi bi-compass-fill"></i></div>
                 <span class="brand-title">Tour<span style="color: var(--primary);">ify</span></span>
             </a>
@@ -368,16 +368,16 @@ $tahun_aktif = date('Y');
 
         <ul class="sidebar-menu">
             <li>
-                <a href="/dashboard.php"><i class="bi bi-grid-1x2-fill"></i> Ringkasan</a>
+                <a href="/api/dashboard.php"><i class="bi bi-grid-1x2-fill"></i> Ringkasan</a>
             </li>
             <li class="active">
-                <a href="/destinasi.php"><i class="bi bi-ticket-perforated-fill"></i> Sistem Tiket</a>
+                <a href="/api/destinasi.php"><i class="bi bi-ticket-perforated-fill"></i> Sistem Tiket</a>
             </li>
             <li>
-                <a href="/promo.php"><i class="bi bi-tags-fill"></i> Promo Eksklusif</a>
+                <a href="/api/promo.php"><i class="bi bi-tags-fill"></i> Promo Eksklusif</a>
             </li>
             <li>
-                <a href="statistik_bps.php"><i class="bi bi-graph-up-arrow"></i> Statistik BPS</a>
+                <a href="/api/dashboard.php?page=bps_stat"><i class="bi bi-graph-up-arrow"></i> Statistik BPS</a>
             </li>
             <li>
                 <a href="/api/riwayat_pesanan.php"><i class="bi bi-clock-history"></i> Riwayat Pesanan</a>
@@ -402,7 +402,7 @@ $tahun_aktif = date('Y');
                         <span class="text-muted d-block" style="font-size: 0.75rem;">Status: Aktif</span>
                     </div>
                 </div>
-                <a href="/logout.php" class="btn btn-logout text-decoration-none"><i class="bi bi-box-arrow-right me-1"></i> Keluar</a>
+                <a href="/api/logout.php" class="btn btn-logout text-decoration-none"><i class="bi bi-box-arrow-right me-1"></i> Keluar</a>
             </div>
         </div>
 

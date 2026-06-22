@@ -1,19 +1,22 @@
 <?php
+// Fix session untuk Vercel serverless
+ini_set('session.save_path', '/tmp');
+ini_set('session.cookie_samesite', 'None');
+ini_set('session.cookie_secure', '1');
 if (session_status() === PHP_SESSION_NONE) session_start();
 
-if (file_exists('api/koneksi.php')) include 'api/koneksi.php';
-elseif (file_exists('koneksi.php')) include 'koneksi.php';
+include __DIR__ . '/koneksi.php';
 
 $nama_tampil  = $_SESSION['user'] ?? $_SESSION['username'] ?? null;
 $is_logged_in = $_SESSION['login_user'] ?? false;
-if (!$nama_tampil || !$is_logged_in) { header("Location: api/login.php"); exit(); }
+if (!$nama_tampil || !$is_logged_in) { header("Location: /api/login.php"); exit(); }
 
 $wisata     = isset($_GET['wisata']) ? strip_tags($_GET['wisata']) : "Destinasi";
 $harga_asli = isset($_GET['harga']) ? (int)$_GET['harga'] : 0;
 $kode_url   = isset($_GET['kode']) ? $_GET['kode'] : '';
 
 if ($harga_asli <= 0) {
-    echo "<script>alert('Harga tidak valid.'); window.location.href='destinasi.php';</script>";
+    echo "<script>alert('Harga tidak valid.'); window.location.href='/api/destinasi.php';</script>";
     exit();
 }
 
@@ -184,7 +187,7 @@ $voucher_json = json_encode($voucher_list);
 
     <!-- Back Button -->
     <div class="mb-4">
-        <a href="destinasi.php" class="back-btn">
+        <a href="/api/destinasi.php" class="back-btn">
             <i class="bi bi-arrow-left"></i> Kembali ke Destinasi
         </a>
     </div>
@@ -203,7 +206,7 @@ $voucher_json = json_encode($voucher_list);
 
         <!-- Body -->
         <div class="card-body-custom">
-            <form action="proses_pembayaran.php" method="POST" id="formPesanan">
+            <form action="/api/proses_pembayaran.php" method="POST" id="formPesanan">
                 <input type="hidden" name="wisata"      value="<?= htmlspecialchars($wisata) ?>">
                 <input type="hidden" name="harga_dasar" id="harga_dasar" value="<?= $harga_asli ?>">
                 <input type="hidden" name="kode"        id="kode_input"  value="<?= htmlspecialchars($kode_url) ?>">
@@ -271,7 +274,7 @@ $voucher_json = json_encode($voucher_list);
                     </div>
                     <!-- Link ke halaman promo -->
                     <div class="mt-2 small text-muted">
-                        Belum punya kode? <a href="promo.php" class="fw-semibold text-decoration-none" style="color:var(--primary);">Lihat promo tersedia →</a>
+                        Belum punya kode? <a href="/api/promo.php" class="fw-semibold text-decoration-none" style="color:var(--primary);">Lihat promo tersedia →</a>
                     </div>
                 </div>
 

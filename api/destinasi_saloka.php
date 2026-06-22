@@ -6,10 +6,13 @@
 //  Data utama disinkronkan ke tabel `destinasi` (kolom id_destinasi).
 // ============================================================
 
+// Fix session untuk Vercel serverless
+ini_set('session.save_path', '/tmp');
+ini_set('session.cookie_samesite', 'None');
+ini_set('session.cookie_secure', '1');
 if (session_status() === PHP_SESSION_NONE) session_start();
 
-if (file_exists('api/koneksi.php')) include 'api/koneksi.php';
-elseif (file_exists('koneksi.php')) include 'koneksi.php';
+include __DIR__ . '/koneksi.php';
 
 $nama_default      = 'Saloka Theme Park';
 $lokasi_default    = 'Semarang';
@@ -130,7 +133,7 @@ date_default_timezone_set('Asia/Jakarta');
 
 <div class="hero">
     <img src="<?= htmlspecialchars($gambar) ?>" alt="<?= htmlspecialchars($nama) ?>" onerror="this.src='https://via.placeholder.com/1200x500?text=<?= urlencode($nama) ?>'">
-    <a href="destinasi.php" class="back-btn"><i class="bi bi-arrow-left me-1"></i> Semua Destinasi</a>
+    <a href="/api/destinasi.php" class="back-btn"><i class="bi bi-arrow-left me-1"></i> Semua Destinasi</a>
     <div class="hero-text">
         <div class="loc"><i class="bi bi-geo-alt-fill me-1"></i><?= htmlspecialchars($lokasi) ?></div>
         <h1><?= htmlspecialchars($nama) ?></h1>
@@ -169,7 +172,7 @@ date_default_timezone_set('Asia/Jakarta');
     <div class="admin-panel">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h6 class="fw-bold mb-0"><i class="bi bi-shield-lock-fill me-2"></i>Panel Admin — Edit Data Destinasi</h6>
-            <a href="admin.php" class="small text-white-50 text-decoration-none">← Kembali ke Panel Admin</a>
+            <a href="/api/admin.php" class="small text-white-50 text-decoration-none">← Kembali ke Panel Admin</a>
         </div>
 
         <?php if ($sukses_update): ?>
@@ -211,7 +214,7 @@ date_default_timezone_set('Asia/Jakarta');
 function lanjutBeli() {
     const nama  = <?= json_encode($nama) ?>;
     const harga = <?= (int)$harga ?>;
-    window.location.href = "konfirmasi_pesanan.php?wisata=" + encodeURIComponent(nama) + "&harga=" + harga;
+    window.location.href = "/api/konfirmasi_pesanan.php?wisata=" + encodeURIComponent(nama) + "&harga=" + harga;
 }
 </script>
 </body>

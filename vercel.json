@@ -4,13 +4,7 @@
       "runtime": "vercel-php@0.7.2"
     }
   },
-  "routes": [
-    { "src": "/login", "dest": "/api/login.php" },
-    { "src": "/register", "dest": "/api/register.php" },
-    { "src": "/dashboard", "dest": "/api/dashboard.php" },
-    { "src": "/admin", "dest": "/api/admin.php" },
-    { "src": "/api/(.*)", "dest": "/api/$1" },
-    { "src": "/(.*)\\.php", "dest": "/api/$1.php" },
-    { "src": "/", "dest": "/api/index.php" }
+  "rewrites": [
+    { "source": "/", "destination": "/api/index.php" }
   ]
 }

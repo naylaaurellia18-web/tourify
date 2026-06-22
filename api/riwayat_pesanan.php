@@ -1,15 +1,18 @@
 <?php
+// Fix session untuk Vercel serverless
+ini_set('session.save_path', '/tmp');
+ini_set('session.cookie_samesite', 'None');
+ini_set('session.cookie_secure', '1');
 if (session_status() === PHP_SESSION_NONE) session_start();
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-if (file_exists('api/koneksi.php')) include 'api/koneksi.php';
-elseif (file_exists('koneksi.php')) include 'koneksi.php';
+include __DIR__ . '/koneksi.php';
 
 $nama_tampil  = $_SESSION['user'] ?? $_SESSION['username'] ?? null;
 $is_logged_in = $_SESSION['login_user'] ?? false;
-if (!$nama_tampil || !$is_logged_in) { header("Location: api/login.php"); exit(); }
+if (!$nama_tampil || !$is_logged_in) { header("Location: /api/login.php"); exit(); }
 
 $riwayat_pesanan = [];
 if (isset($conn)) {
@@ -151,17 +154,17 @@ $metode_label = [
     <!-- Sidebar -->
     <nav id="sidebar">
         <div class="sidebar-header">
-            <a class="nav-brand-box" href="dashboard.php">
+            <a class="nav-brand-box" href="/api/dashboard.php">
                 <div class="logo-icon"><i class="bi bi-compass-fill"></i></div>
                 <span class="brand-title" style="font-size:1.4rem;">Tour<span style="color:var(--primary);">ify</span></span>
             </a>
         </div>
         <ul class="sidebar-menu">
-            <li><a href="dashboard.php"><i class="bi bi-grid-1x2-fill"></i> Ringkasan</a></li>
-            <li><a href="destinasi.php"><i class="bi bi-ticket-perforated-fill"></i> Sistem Tiket</a></li>
-            <li><a href="promo.php"><i class="bi bi-tags-fill"></i> Promo Eksklusif</a></li>
-            <li><a href="dashboard.php?page=bps_stat"><i class="bi bi-bar-chart-line-fill"></i> Statistik BPS</a></li>
-            <li class="active"><a href="riwayat_pesanan.php"><i class="bi bi-clock-history"></i> Riwayat Pesanan</a></li>
+            <li><a href="/api/dashboard.php"><i class="bi bi-grid-1x2-fill"></i> Ringkasan</a></li>
+            <li><a href="/api/destinasi.php"><i class="bi bi-ticket-perforated-fill"></i> Sistem Tiket</a></li>
+            <li><a href="/api/promo.php"><i class="bi bi-tags-fill"></i> Promo Eksklusif</a></li>
+            <li><a href="/api/dashboard.php?page=bps_stat"><i class="bi bi-bar-chart-line-fill"></i> Statistik BPS</a></li>
+            <li class="active"><a href="/api/riwayat_pesanan.php"><i class="bi bi-clock-history"></i> Riwayat Pesanan</a></li>
         </ul>
     </nav>
 
@@ -179,7 +182,7 @@ $metode_label = [
                         <span class="text-muted d-block" style="font-size:0.75rem;">Pengguna</span>
                     </div>
                 </div>
-                <a href="logout.php" class="btn-logout"><i class="bi bi-box-arrow-right me-1"></i> Keluar</a>
+                <a href="/api/logout.php" class="btn-logout"><i class="bi bi-box-arrow-right me-1"></i> Keluar</a>
             </div>
         </div>
 
@@ -199,7 +202,7 @@ $metode_label = [
                 <div class="empty-state-icon"><i class="bi bi-basket3"></i></div>
                 <h6 class="fw-bold text-dark mb-1">Belum Ada Riwayat Pesanan</h6>
                 <p class="text-muted small mb-0 mx-auto" style="max-width:400px;">Anda belum melakukan pemesanan tiket apapun. Semua riwayat transaksi akan muncul di sini.</p>
-                <a href="destinasi.php" class="btn mt-4 px-4 py-2 rounded-pill fw-semibold shadow-sm text-white" style="background:var(--primary-gradient);border:none;">
+                <a href="/api/destinasi.php" class="btn mt-4 px-4 py-2 rounded-pill fw-semibold shadow-sm text-white" style="background:var(--primary-gradient);border:none;">
                     <i class="bi bi-search me-1"></i> Cari Tiket Sekarang
                 </a>
             </div>

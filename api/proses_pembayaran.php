@@ -1,10 +1,13 @@
 <?php
+// Fix session untuk Vercel serverless
+ini_set('session.save_path', '/tmp');
+ini_set('session.cookie_samesite', 'None');
+ini_set('session.cookie_secure', '1');
 if (session_status() === PHP_SESSION_NONE) session_start();
 
-if (file_exists('api/koneksi.php')) include 'api/koneksi.php';
-elseif (file_exists('koneksi.php')) include 'koneksi.php';
+include __DIR__ . '/koneksi.php';
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header("Location: destinasi.php"); exit(); }
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header("Location: /api/destinasi.php"); exit(); }
 
 $username     = $_SESSION['user'] ?? $_SESSION['username'] ?? 'Guest';
 $nama_pemesan = mysqli_real_escape_string($conn, $_POST['nama_pemesan'] ?? '');
@@ -64,7 +67,7 @@ if ($id_destinasi !== null && $stok_tersedia < $jumlah) {
             <h5 class="fw-bold mb-2">Stok Tiket Tidak Cukup</h5>
             <p class="text-muted small mb-1">Destinasi <strong><?= htmlspecialchars($wisata) ?></strong> hanya tersisa <strong><?= $stok_tersedia ?> tiket</strong>, sedangkan kamu memesan <strong><?= $jumlah ?> tiket</strong>.</p>
             <p class="text-muted small">Silakan kurangi jumlah tiket atau pilih destinasi lain.</p>
-            <a href="destinasi.php" class="btn-back"><i class="bi bi-arrow-left me-1"></i>Kembali ke Daftar Destinasi</a>
+            <a href="/api/destinasi.php" class="btn-back"><i class="bi bi-arrow-left me-1"></i>Kembali ke Daftar Destinasi</a>
         </div>
     </body>
     </html>
@@ -262,10 +265,10 @@ $kode_unik   = 'TRF-' . str_pad($id_pesanan, 5, '0', STR_PAD_LEFT);
 
             <!-- Tombol Selesai -->
             <div class="mt-4">
-                <a href="riwayat_pesanan.php" class="btn btn-selesai d-block text-center">
+                <a href="/api/riwayat_pesanan.php" class="btn btn-selesai d-block text-center">
                     <i class="bi bi-check-circle-fill me-2"></i>Saya Sudah Bayar — Lihat E-Tiket
                 </a>
-                <a href="dashboard.php" class="btn btn-outline-secondary w-100 mt-3 rounded-3 fw-semibold">Kembali ke Dashboard</a>
+                <a href="/api/dashboard.php" class="btn btn-outline-secondary w-100 mt-3 rounded-3 fw-semibold">Kembali ke Dashboard</a>
             </div>
         </div>
     </div>

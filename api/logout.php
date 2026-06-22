@@ -10,6 +10,6 @@ session_start();
 session_unset();
 session_destroy();
 // Redirect ke login
-header("Location: /login.php");
+header("Location: /api/login.php");
 exit();
 ?>

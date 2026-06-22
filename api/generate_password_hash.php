@@ -1,12 +1,20 @@
 <?php
 // ============================================================
 //  GENERATE PASSWORD HASH — Tourify Admin
-//  Buka file ini di browser (misal: localhost/tourify/generate_password_hash.php)
-//  untuk membuat hash password admin baru.
+//  Akses: https://domain-kamu.vercel.app/api/generate_password_hash.php?key=RAHASIA
+//  Ganti 'RAHASIA' di bawah dengan kata kunci milikmu sendiri.
 //
-//  PENTING: Hapus file ini dari server setelah selesai dipakai,
-//  jangan dibiarkan publik di server produksi.
+//  PENTING: Hapus file ini dari server (atau ganti $secret_key)
+//  setelah selesai dipakai, jangan dibiarkan publik tanpa proteksi
+//  di server produksi.
 // ============================================================
+
+$secret_key = 'ganti-dengan-kata-kunci-rahasiamu';
+
+if (($_GET['key'] ?? '') !== $secret_key) {
+    http_response_code(403);
+    die('Akses ditolak. Tambahkan ?key=KATA_KUNCI_RAHASIA yang benar di URL.');
+}
 
 $hasil = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['password'])) {

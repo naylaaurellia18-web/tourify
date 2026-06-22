@@ -248,7 +248,7 @@ $overlay_hero = "linear-gradient(to bottom, rgba(15, 23, 42, 0.45), rgba(15, 23,
 
 <nav class="navbar navbar-light navbar-custom sticky-top">
     <div class="container px-4">
-        <a class="nav-brand-box" href="index.php">
+        <a class="nav-brand-box" href="/">
             <div class="logo-icon"><i class="fas fa-globe-asia"></i></div>
             <span class="brand-title">Tour<span style="color: var(--primary);">ify</span></span>
         </a>
@@ -257,7 +257,7 @@ $overlay_hero = "linear-gradient(to bottom, rgba(15, 23, 42, 0.45), rgba(15, 23,
                 <i class="fas fa-clock text-warning"></i>
                 <span id="jamNav" class="fw-bold text-secondary" style="font-size: 0.85rem;"><?php echo date('H:i:s'); ?> WIB</span>
             </div>
-            <a href="api/login.php" class="btn rounded-pill px-4 fw-bold btn-sm shadow-sm" style="background: var(--text-dark); color: var(--white); font-size: 0.85rem; padding: 8px 20px;">Masuk</a>
+            <a href="/api/login.php" class="btn rounded-pill px-4 fw-bold btn-sm shadow-sm" style="background: var(--text-dark); color: var(--white); font-size: 0.85rem; padding: 8px 20px;">Masuk</a>
         </div>
     </div>
 </nav>
@@ -273,7 +273,7 @@ $overlay_hero = "linear-gradient(to bottom, rgba(15, 23, 42, 0.45), rgba(15, 23,
         
         <div class="d-flex gap-3 justify-content-center flex-wrap">
             <button onclick="bukaModalAuth('Tiket Wisata Utama')" class="btn btn-lg btn-orange-vivid">Mulai Cari Tiket</button>
-            <a href="api/register.php" class="btn btn-outline-dark-custom btn-lg">Daftar Akun Baru</a>
+            <a href="/api/register.php" class="btn btn-outline-dark-custom btn-lg">Daftar Akun Baru</a>
         </div>
     </div>
 </section>
@@ -446,10 +446,10 @@ $overlay_hero = "linear-gradient(to bottom, rgba(15, 23, 42, 0.45), rgba(15, 23,
                 </p>
                 
                 <div class="d-grid gap-3">
-                    <a href="api/login.php" class="btn btn-orange-vivid py-3">
+                    <a href="/api/login.php" class="btn btn-orange-vivid py-3">
                         <i class="bi bi-box-arrow-in-right me-2"></i> Masuk ke Akun
                     </a>
-                    <a href="api/register.php" class="btn btn-light py-3 fw-bold text-dark rounded-pill border" style="background: #f8fafc;">
+                    <a href="/api/register.php" class="btn btn-light py-3 fw-bold text-dark rounded-pill border" style="background: #f8fafc;">
                         <i class="bi bi-person-plus me-2"></i> Belum Punya Akun? Daftar
                     </a>
                 </div>
