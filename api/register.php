@@ -42,9 +42,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         } else {
             // Enkripsi password demi keamanan akun (Menggunakan PASSWORD_DEFAULT)
             $password_hashed = password_hash($password, PASSWORD_DEFAULT);
-            
+
+            // Generate ID manual (TiDB Serverless tidak mendukung AUTO_INCREMENT)
+            $r_max_id = mysqli_query($conn, "SELECT COALESCE(MAX(id), 0) AS max_id FROM users");
+            $max_id   = $r_max_id ? (int)mysqli_fetch_assoc($r_max_id)['max_id'] : 0;
+            $new_id   = $max_id > 0 ? $max_id + 1 : (int)(microtime(true) * 1000);
+
             // Query input disesuaikan dengan struktur tabel baru
-            $query_input = "INSERT INTO users (nama_lengkap, username, email, password) VALUES ('$nama_lengkap', '$username', '$email', '$password_hashed')";
+            $query_input = "INSERT INTO users (id, nama_lengkap, username, email, password) VALUES ($new_id, '$nama_lengkap', '$username', '$email', '$password_hashed')";
             
             if (mysqli_query($conn, $query_input)) {
                 $success_msg = "Akun Tourify berhasil dibuat! Mengalihkan ke halaman masuk...";

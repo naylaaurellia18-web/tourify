@@ -52,7 +52,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['simpan_admin']) && $i
     if ($id_destinasi_halaman !== null) {
         mysqli_query($conn, "UPDATE destinasi SET harga=$harga_baru, stok_tiket=$stok_baru, deskripsi='$deskripsi_baru', gambar='$gambar_baru', lokasi='$lokasi_escaped' WHERE id_destinasi = $id_destinasi_halaman");
     } else {
-        mysqli_query($conn, "INSERT INTO destinasi (nama_destinasi, lokasi, deskripsi, harga, stok_tiket, gambar) VALUES ('$nama_escaped','$lokasi_escaped','$deskripsi_baru',$harga_baru,$stok_baru,'$gambar_baru')");
+        // Generate ID manual (TiDB Serverless tidak mendukung AUTO_INCREMENT)
+        $r_max_d = mysqli_query($conn, "SELECT COALESCE(MAX(id_destinasi), 0) AS max_id FROM destinasi");
+        $max_d   = $r_max_d ? (int)mysqli_fetch_assoc($r_max_d)['max_id'] : 0;
+        $new_d_id = $max_d > 0 ? $max_d + 1 : (int)(microtime(true) * 1000);
+        mysqli_query($conn, "INSERT INTO destinasi (id_destinasi, nama_destinasi, lokasi, deskripsi, harga, stok_tiket, gambar) VALUES ($new_d_id,'$nama_escaped','$lokasi_escaped','$deskripsi_baru',$harga_baru,$stok_baru,'$gambar_baru')");
     }
     $sukses_update = true;
 

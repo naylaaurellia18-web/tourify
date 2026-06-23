@@ -53,8 +53,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tambah_promo_dest']))
     $diskon     = $tipe === 'diskon'   ? (int)($_POST['nilai'] ?? 0) : 0;
     $potongan   = $tipe === 'potongan' ? (int)($_POST['nilai'] ?? 0) : 0;
     $keterangan = mysqli_real_escape_string($conn, $_POST['keterangan'] ?? '');
-    mysqli_query($conn, "INSERT INTO voucher (kode, diskon, potongan, keterangan, aktif, id_destinasi)
-                         VALUES ('$kode',$diskon,$potongan,'$keterangan',1,$dest_id)");
+
+    // Generate ID manual (TiDB Serverless tidak mendukung AUTO_INCREMENT)
+    $r_max_v = mysqli_query($conn, "SELECT COALESCE(MAX(id), 0) AS max_id FROM voucher");
+    $max_v   = $r_max_v ? (int)mysqli_fetch_assoc($r_max_v)['max_id'] : 0;
+    $new_v_id = $max_v > 0 ? $max_v + 1 : (int)(microtime(true) * 1000);
+
+    mysqli_query($conn, "INSERT INTO voucher (id, kode, diskon, potongan, keterangan, aktif, id_destinasi)
+                         VALUES ($new_v_id,'$kode',$diskon,$potongan,'$keterangan',1,$dest_id)");
     header("Location: admin.php?page=destinasi_detail&id=$dest_id&promo_msg=tambah");
     exit();
 }
