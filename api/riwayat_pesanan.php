@@ -11,11 +11,22 @@ $nama_tampil  = $_SESSION['user'] ?? $_SESSION['username'] ?? null;
 $is_logged_in = $_SESSION['login_user'] ?? false;
 if (!$nama_tampil || !$is_logged_in) { header("Location: /api/login.php"); exit(); }
 
+$daftar_menunggu = [];
 $riwayat_pesanan = [];
 if (isset($conn)) {
     $user_escaped = mysqli_real_escape_string($conn, $nama_tampil);
     $q = mysqli_query($conn, "SELECT * FROM pesanan WHERE username='$user_escaped' ORDER BY id DESC");
-    if ($q) while ($row = mysqli_fetch_assoc($q)) $riwayat_pesanan[] = $row;
+    if ($q) {
+        while ($row = mysqli_fetch_assoc($q)) {
+            $status_row = $row['status'] ?? 'aktif';
+            if ($status_row === 'menunggu_pembayaran') {
+                $daftar_menunggu[] = $row;
+            } else {
+                // 'aktif' dan 'dibatalkan' masuk ke riwayat final (read-only)
+                $riwayat_pesanan[] = $row;
+            }
+        }
+    }
 }
 
 date_default_timezone_set('Asia/Jakarta');
@@ -187,6 +198,53 @@ $metode_label = [
             </div>
         </div>
 
+        <?php if (!empty($daftar_menunggu)): ?>
+        <div class="card info-card mb-4" style="border:1.5px solid #fde68a;background:#fffbeb;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="fw-bold mb-0" style="color:#92400e;"><i class="bi bi-hourglass-split me-2"></i>Menunggu Pembayaran</h5>
+                    <p class="text-muted small mb-0">Pesanan yang belum dikonfirmasi pembayarannya. Selesaikan atau batalkan sebelum waktu habis.</p>
+                </div>
+                <span class="badge bg-warning-subtle text-warning border p-2 rounded-3 small fw-semibold">
+                    <?= count($daftar_menunggu) ?> Pesanan
+                </span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-custom align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Kode</th>
+                            <th>Destinasi</th>
+                            <th>Tanggal</th>
+                            <th>Jumlah</th>
+                            <th>Total</th>
+                            <th class="text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($daftar_menunggu as $p): ?>
+                        <tr>
+                            <td class="fw-bold text-primary">#TRF-<?= str_pad($p['id'],5,'0',STR_PAD_LEFT) ?></td>
+                            <td class="fw-semibold"><?= htmlspecialchars($p['wisata']) ?></td>
+                            <td><?= date('d M Y', strtotime($p['tanggal'])) ?></td>
+                            <td><?= $p['jumlah'] ?> tiket</td>
+                            <td class="fw-bold" style="color:#92400e;">Rp <?= number_format($p['total_bayar'],0,',','.') ?></td>
+                            <td class="text-center">
+                                <div class="d-flex gap-2 justify-content-center align-items-center">
+                                    <span class="small text-muted" style="font-size:0.78rem;"><i class="bi bi-info-circle me-1"></i>Selesaikan di halaman pembayaran</span>
+                                    <button class="btn-batal" onclick="konfirmasiBatal(<?= (int)$p['id'] ?>, this)">
+                                        <i class="bi bi-x-circle me-1"></i> Batalkan
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <?php endif; ?>
+
         <div class="card info-card">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
@@ -227,8 +285,6 @@ $metode_label = [
                         <?php $no=1; foreach ($riwayat_pesanan as $p):
                             $met = $metode_label[$p['metode_pembayaran']] ?? ['icon'=>'bi-credit-card','label'=>$p['metode_pembayaran'],'color'=>'#64748b'];
                             $status_pesanan = $p['status'] ?? 'aktif';
-                            $sudah_lewat    = strtotime($p['tanggal']) < strtotime(date('Y-m-d'));
-                            $bisa_dibatalkan = ($status_pesanan === 'aktif' && !$sudah_lewat);
                         ?>
                         <tr>
                             <td class="text-muted"><?= $no++ ?></td>
@@ -254,26 +310,19 @@ $metode_label = [
                                 <?php endif; ?>
                             </td>
                             <td class="text-center">
-                                <div class="d-flex gap-2 justify-content-center">
-                                    <button class="btn-cetak" onclick='bukaTiket(<?= json_encode([
-                                        "id"      => $p["id"],
-                                        "wisata"  => $p["wisata"],
-                                        "pemesan" => $p["nama_pemesan"],
-                                        "tanggal" => date("d M Y", strtotime($p["tanggal"])),
-                                        "jumlah"  => $p["jumlah"],
-                                        "metode"  => $met["label"],
-                                        "kode_promo" => $p["kode_promo"],
-                                        "total"   => number_format($p["total_bayar"],0,",","."),
-                                        "created" => date("d M Y H:i", strtotime($p["created_at"] ?? "now")),
-                                    ]) ?>)'>
-                                        <i class="bi bi-printer-fill me-1"></i> E-Tiket
-                                    </button>
-                                    <?php if ($bisa_dibatalkan): ?>
-                                    <button class="btn-batal" onclick="konfirmasiBatal(<?= (int)$p['id'] ?>, this)">
-                                        <i class="bi bi-x-circle me-1"></i> Batalkan
-                                    </button>
-                                    <?php endif; ?>
-                                </div>
+                                <button class="btn-cetak" onclick='bukaTiket(<?= json_encode([
+                                    "id"      => $p["id"],
+                                    "wisata"  => $p["wisata"],
+                                    "pemesan" => $p["nama_pemesan"],
+                                    "tanggal" => date("d M Y", strtotime($p["tanggal"])),
+                                    "jumlah"  => $p["jumlah"],
+                                    "metode"  => $met["label"],
+                                    "kode_promo" => $p["kode_promo"],
+                                    "total"   => number_format($p["total_bayar"],0,",","."),
+                                    "created" => date("d M Y H:i", strtotime($p["created_at"] ?? "now")),
+                                ]) ?>)'>
+                                    <i class="bi bi-printer-fill me-1"></i> E-Tiket
+                                </button>
                             </td>
                         </tr>
                         <?php endforeach; ?>

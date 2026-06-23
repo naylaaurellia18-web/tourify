@@ -78,8 +78,9 @@ $max_id = $r_max ? (int)mysqli_fetch_assoc($r_max)['max_id'] : 0;
 $new_id = $max_id > 0 ? $max_id + 1 : (int)(microtime(true) * 1000);
 
 // Simpan ke database
+// Status awal 'menunggu_pembayaran' -- baru jadi 'aktif' setelah user konfirmasi bayar
 $sql = "INSERT INTO pesanan (id, username, nama_pemesan, wisata, jumlah, tanggal, metode_pembayaran, kode_promo, total_bayar, status)
-        VALUES ($new_id,'$username','$nama_pemesan','$wisata',$jumlah,'$tanggal','$metode','$kode_promo',$total_bayar,'aktif')";
+        VALUES ($new_id,'$username','$nama_pemesan','$wisata',$jumlah,'$tanggal','$metode','$kode_promo',$total_bayar,'menunggu_pembayaran')";
 
 $id_pesanan = 0;
 if (mysqli_query($conn, $sql)) {
@@ -267,9 +268,9 @@ $kode_unik   = 'TRF-' . str_pad($id_pesanan, 5, '0', STR_PAD_LEFT);
 
             <!-- Tombol Selesai -->
             <div class="mt-4">
-                <a href="/api/riwayat_pesanan.php" class="btn btn-selesai d-block text-center">
+                <button type="button" class="btn btn-selesai d-block text-center w-100" onclick="konfirmasiSudahBayar(<?= (int)$id_pesanan ?>)">
                     <i class="bi bi-check-circle-fill me-2"></i>Saya Sudah Bayar — Lihat E-Tiket
-                </a>
+                </button>
                 <a href="/api/dashboard.php" class="btn btn-outline-secondary w-100 mt-3 rounded-3 fw-semibold">Kembali ke Dashboard</a>
             </div>
         </div>
@@ -306,6 +307,27 @@ function salin(teks, btn) {
         btn.innerHTML = '<i class="bi bi-check2 me-1"></i>Tersalin!';
         btn.style.background='#dcfce7'; btn.style.color='#16a34a';
         setTimeout(()=>{ btn.innerHTML=semula; btn.style.background=''; btn.style.color=''; }, 2000);
+    });
+}
+
+// Konfirmasi sudah bayar -> update status pesanan jadi 'aktif', baru pindah ke riwayat
+function konfirmasiSudahBayar(idPesanan) {
+    const btn = event.target.closest('button');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Memproses...';
+
+    fetch('/api/konfirmasi_bayar.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'id_pesanan=' + encodeURIComponent(idPesanan)
+    })
+    .then(res => res.json())
+    .then(data => {
+        window.location.href = '/api/riwayat_pesanan.php';
+    })
+    .catch(() => {
+        // Tetap arahkan ke riwayat walau request gagal, supaya user tidak macet di halaman ini
+        window.location.href = '/api/riwayat_pesanan.php';
     });
 }
 </script>
