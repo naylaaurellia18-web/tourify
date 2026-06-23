@@ -391,6 +391,9 @@ $tahun_aktif = date('Y');
                 <a href="/api/riwayat_pesanan.php"><i class="bi bi-clock-history"></i> Riwayat Pesanan</a>
             </li>
             <li>
+                <a href="/api/ulasan.php"><i class="bi bi-star-fill"></i> Ulasan</a>
+            </li>
+            <li>
                 <a href="/api/profil.php"><i class="bi bi-person-circle"></i> Profil Saya</a>
             </li>
         </ul>

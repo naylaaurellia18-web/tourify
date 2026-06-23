@@ -176,6 +176,7 @@ $metode_label = [
             <li><a href="/api/promo.php"><i class="bi bi-tags-fill"></i> Promo Eksklusif</a></li>
             <li><a href="/api/dashboard.php?page=bps"><i class="bi bi-bar-chart-line-fill"></i> Statistik BPS</a></li>
             <li class="active"><a href="/api/riwayat_pesanan.php"><i class="bi bi-clock-history"></i> Riwayat Pesanan</a></li>
+            <li><a href="/api/ulasan.php"><i class="bi bi-star-fill"></i> Ulasan</a></li>
             <li><a href="/api/profil.php"><i class="bi bi-person-circle"></i> Profil Saya</a></li>
         </ul>
     </nav>
@@ -284,7 +285,9 @@ $metode_label = [
                     <tbody>
                         <?php $no=1; foreach ($riwayat_pesanan as $p):
                             $met = $metode_label[$p['metode_pembayaran']] ?? ['icon'=>'bi-credit-card','label'=>$p['metode_pembayaran'],'color'=>'#64748b'];
-                            $status_pesanan = $p['status'] ?? 'aktif';
+                            $status_pesanan  = $p['status'] ?? 'aktif';
+                            $sudah_lewat     = strtotime($p['tanggal']) < strtotime(date('Y-m-d'));
+                            $bisa_dibatalkan = ($status_pesanan === 'aktif' && !$sudah_lewat);
                         ?>
                         <tr>
                             <td class="text-muted"><?= $no++ ?></td>
@@ -310,19 +313,26 @@ $metode_label = [
                                 <?php endif; ?>
                             </td>
                             <td class="text-center">
-                                <button class="btn-cetak" onclick='bukaTiket(<?= json_encode([
-                                    "id"      => $p["id"],
-                                    "wisata"  => $p["wisata"],
-                                    "pemesan" => $p["nama_pemesan"],
-                                    "tanggal" => date("d M Y", strtotime($p["tanggal"])),
-                                    "jumlah"  => $p["jumlah"],
-                                    "metode"  => $met["label"],
-                                    "kode_promo" => $p["kode_promo"],
-                                    "total"   => number_format($p["total_bayar"],0,",","."),
-                                    "created" => date("d M Y H:i", strtotime($p["created_at"] ?? "now")),
-                                ]) ?>)'>
-                                    <i class="bi bi-printer-fill me-1"></i> E-Tiket
-                                </button>
+                                <div class="d-flex gap-2 justify-content-center">
+                                    <button class="btn-cetak" onclick='bukaTiket(<?= json_encode([
+                                        "id"      => $p["id"],
+                                        "wisata"  => $p["wisata"],
+                                        "pemesan" => $p["nama_pemesan"],
+                                        "tanggal" => date("d M Y", strtotime($p["tanggal"])),
+                                        "jumlah"  => $p["jumlah"],
+                                        "metode"  => $met["label"],
+                                        "kode_promo" => $p["kode_promo"],
+                                        "total"   => number_format($p["total_bayar"],0,",","."),
+                                        "created" => date("d M Y H:i", strtotime($p["created_at"] ?? "now")),
+                                    ]) ?>)'>
+                                        <i class="bi bi-printer-fill me-1"></i> E-Tiket
+                                    </button>
+                                    <?php if ($bisa_dibatalkan): ?>
+                                    <button class="btn-batal" onclick="konfirmasiBatal(<?= (int)$p['id'] ?>, this)">
+                                        <i class="bi bi-x-circle me-1"></i> Batalkan
+                                    </button>
+                                    <?php endif; ?>
+                                </div>
                             </td>
                         </tr>
                         <?php endforeach; ?>

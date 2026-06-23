@@ -134,6 +134,7 @@ $tahun_aktif = date('Y');
             <li><a href="/api/promo.php"><i class="bi bi-tags-fill"></i> Promo Eksklusif</a></li>
             <li><a href="/api/dashboard.php?page=bps"><i class="bi bi-bar-chart-line-fill"></i> Statistik BPS</a></li>
             <li><a href="/api/riwayat_pesanan.php"><i class="bi bi-clock-history"></i> Riwayat Pesanan</a></li>
+            <li><a href="/api/ulasan.php"><i class="bi bi-star-fill"></i> Ulasan</a></li>
             <li class="active"><a href="/api/profil.php"><i class="bi bi-person-circle"></i> Profil Saya</a></li>
         </ul>
     </nav>
