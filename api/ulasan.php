@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['kirim_ulasan'])) {
         // Generate ID manual (TiDB Serverless tidak mendukung AUTO_INCREMENT)
         $r_max_u = mysqli_query($conn, "SELECT COALESCE(MAX(id), 0) AS max_id FROM ulasan");
         $max_u   = $r_max_u ? (int)mysqli_fetch_assoc($r_max_u)['max_id'] : 0;
-        $new_u_id = $max_u > 0 ? $max_u + 1 : (int)(microtime(true) * 1000);
+        $new_u_id = $max_u + 1;
 
         mysqli_query($conn, "INSERT INTO ulasan (id, id_destinasi, username, rating, komentar) VALUES ($new_u_id,$id_dest,'$uname',$rating,'$komentar')");
         $pesan = "Ulasan berhasil dikirim!"; $tipe_pesan = 'success';

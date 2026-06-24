@@ -75,7 +75,7 @@ if ($id_destinasi !== null && $stok_tersedia < $jumlah) {
 // Generate ID manual karena TiDB Serverless tidak support AUTO_INCREMENT
 $r_max = mysqli_query($conn, "SELECT COALESCE(MAX(id), 0) AS max_id FROM pesanan");
 $max_id = $r_max ? (int)mysqli_fetch_assoc($r_max)['max_id'] : 0;
-$new_id = $max_id > 0 ? $max_id + 1 : (int)(microtime(true) * 1000);
+$new_id = $max_id + 1;
 
 // Simpan ke database
 // Status awal 'menunggu_pembayaran' -- baru jadi 'aktif' setelah user konfirmasi bayar
