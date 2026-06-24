@@ -37,13 +37,13 @@ $default_page = ($admin_role === 'destinasi') ? 'destinasi_detail' : 'dashboard'
 $page = $_GET['page'] ?? $default_page;
 
 // --- Batasan akses untuk admin per-destinasi ---
-// Admin destinasi TIDAK BOLEH akses 'destinasi' (kelola semua) atau 'promo' (global).
-// Mereka hanya boleh lihat dashboard ringkas & detail destinasi MILIK SENDIRI.
+// Admin destinasi TIDAK BOLEH akses 'dashboard' (global), 'destinasi' (kelola semua),
+// atau 'promo' (global). Mereka hanya boleh lihat detail destinasi MILIK SENDIRI.
 if ($admin_role === 'destinasi') {
     // Helper: cek apakah request ini sudah pernah diredirect sebelumnya (anti infinite loop)
     $sudah_redirect = isset($_GET['_r']);
 
-    if ($page === 'destinasi' && !$sudah_redirect) {
+    if (in_array($page, ['dashboard', 'destinasi', 'promo']) && !$sudah_redirect) {
         // Paksa langsung ke detail destinasi miliknya sendiri
         header("Location: admin.php?page=destinasi_detail&id=" . (int)$admin_destinasi . "&_r=1");
         exit();
@@ -57,11 +57,6 @@ if ($admin_role === 'destinasi') {
         }
         // Pastikan $_GET['id'] terisi dengan id milik admin ini (untuk dipakai oleh admin_destinasi_detail.php)
         $_GET['id'] = (int)$admin_destinasi;
-    }
-    if ($page === 'promo' && !$sudah_redirect) {
-        // Promo bersifat global, admin destinasi tidak berhak kelola
-        header("Location: admin.php?page=destinasi_detail&id=" . (int)$admin_destinasi . "&_r=1");
-        exit();
     }
 }
 
