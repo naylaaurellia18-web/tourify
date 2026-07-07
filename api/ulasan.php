@@ -74,6 +74,13 @@ $all_dest = [];
 $qall = mysqli_query($conn, "SELECT id_destinasi, nama_destinasi FROM destinasi ORDER BY nama_destinasi ASC");
 if ($qall) while ($r = mysqli_fetch_assoc($qall)) $all_dest[] = $r;
 
+// --- Ambil daftar destinasi yang SUDAH diulas oleh user yang sedang login ---
+// Dipakai untuk kasih tanda "✓ Sudah diulas" di dropdown & panel ringkasan.
+$uname_esc = mysqli_real_escape_string($conn, $username);
+$sudah_diulas = []; // [id_destinasi => rating]
+$qsudah = mysqli_query($conn, "SELECT id_destinasi, rating FROM ulasan WHERE username='$uname_esc'");
+if ($qsudah) while ($r = mysqli_fetch_assoc($qsudah)) $sudah_diulas[(int)$r['id_destinasi']] = (int)$r['rating'];
+
 $tahun = date('Y');
 ?>
 <!DOCTYPE html>
@@ -160,12 +167,30 @@ $tahun = date('Y');
                     <option value="">-- Pilih Destinasi --</option>
                     <?php foreach ($all_dest as $d): ?>
                     <option value="<?= $d['id_destinasi'] ?>" <?= $id_destinasi == $d['id_destinasi'] ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($d['nama_destinasi']) ?>
+                        <?= htmlspecialchars($d['nama_destinasi']) ?><?= isset($sudah_diulas[$d['id_destinasi']]) ? ' ✓ (sudah diulas)' : '' ?>
                     </option>
                     <?php endforeach; ?>
                 </select>
                 <button type="submit" class="btn fw-semibold" style="background:var(--primary);color:#fff;border-radius:10px;">Lihat Ulasan</button>
             </form>
+
+            <?php if (!empty($sudah_diulas)): ?>
+            <hr class="my-3">
+            <h6 class="fw-bold mb-2" style="font-size:0.85rem;color:var(--text-muted);">
+                <i class="bi bi-check-circle-fill me-1" style="color:#16a34a;"></i>
+                Destinasi yang sudah kamu ulas (<?= count($sudah_diulas) ?>)
+            </h6>
+            <div class="d-flex flex-wrap gap-2">
+                <?php foreach ($all_dest as $d): ?>
+                    <?php if (isset($sudah_diulas[$d['id_destinasi']])): ?>
+                    <a href="/ulasan.php?id=<?= $d['id_destinasi'] ?>" class="text-decoration-none d-flex align-items-center gap-1" style="background:#f0fdf4;border:1px solid #bbf7d0;color:#16a34a;padding:6px 12px;border-radius:100px;font-size:0.8rem;font-weight:600;">
+                        <?= htmlspecialchars($d['nama_destinasi']) ?>
+                        <span style="color:#f59e0b;"><?= str_repeat('★', $sudah_diulas[$d['id_destinasi']]) ?></span>
+                    </a>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
         </div>
 
         <?php if ($destinasi): ?>
@@ -226,9 +251,9 @@ $tahun = date('Y');
         <div class="ulasan-card">
             <div class="d-flex justify-content-between align-items-start mb-2">
                 <div class="d-flex align-items-center gap-2">
-                    <div class="avatar"><?= strtoupper(substr($u['username'],0,1)) ?></div>
+                    <div class="avatar"><?= strtoupper(substr($u['nama_pemberi'] ?: $u['username'],0,1)) ?></div>
                     <div>
-                        <div class="fw-semibold small"><?= htmlspecialchars($u['username']) ?> <?= $u['username']===$username ? '<span class="badge" style="background:#fff3eb;color:var(--primary);font-size:0.65rem;">Kamu</span>' : '' ?></div>
+                        <div class="fw-semibold small"><?= htmlspecialchars($u['nama_pemberi'] ?: $u['username']) ?> <?= $u['username']===$username ? '<span class="badge" style="background:#fff3eb;color:var(--primary);font-size:0.65rem;">Kamu</span>' : '' ?></div>
                         <div class="star-display" style="font-size:0.8rem;"><?= str_repeat('★',$u['rating']) ?><?= str_repeat('☆',5-$u['rating']) ?></div>
                     </div>
                 </div>
