@@ -12,6 +12,16 @@
 //      $ULASAN_PARTIAL_MODE membedakan bagian mana yang dijalankan.
 // ============================================================
 
+// --- Cegah akses langsung ke file ini (harus di-include dari halaman destinasi) ---
+if (basename($_SERVER['SCRIPT_FILENAME']) === basename(__FILE__)) {
+    header('Location: /index.php');
+    exit;
+}
+
+// --- Pastikan variabel wajib selalu terdefinisi meski parent lupa mengisinya ---
+$id_destinasi_halaman = $id_destinasi_halaman ?? null;
+$conn                 = $conn ?? null;
+
 if (!isset($ULASAN_PARTIAL_MODE)) $ULASAN_PARTIAL_MODE = 'logic';
 
 if ($ULASAN_PARTIAL_MODE === 'logic') {
