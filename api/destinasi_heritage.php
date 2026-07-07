@@ -65,6 +65,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['simpan_admin']) && $i
     if ($q && mysqli_num_rows($q) > 0) $d = mysqli_fetch_assoc($q);
 }
 
+// --- Widget ulasan: proses submit/hapus ulasan SEBELUM ada output HTML ---
+$ULASAN_PARTIAL_MODE = 'logic';
+include __DIR__ . '/ulasan_destinasi_partial.php';
+
 $nama      = $d['nama_destinasi'] ?? $nama_default;
 $lokasi    = $d['lokasi'] ?? $lokasi_default;
 $deskripsi = $d['deskripsi'] ?? $deskripsi_default;
@@ -121,6 +125,12 @@ date_default_timezone_set('Asia/Jakarta');
         .admin-panel input, .admin-panel textarea { border-radius:10px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.06); color:#fff; padding:10px 14px; width:100%; }
         .admin-panel input::placeholder, .admin-panel textarea::placeholder { color:rgba(255,255,255,0.4); }
         .admin-panel input:focus, .admin-panel textarea:focus { outline:none; border-color:var(--accent); background:rgba(255,255,255,0.1); }
+
+        .star-input { display:flex; gap:6px; flex-direction:row-reverse; justify-content:flex-end; }
+        .star-input input { display:none; }
+        .star-input label { font-size:1.6rem; color:#d1d5db; cursor:pointer; transition:color 0.15s; }
+        .star-input input:checked ~ label, .star-input label:hover, .star-input label:hover ~ label { color:#f59e0b; }
+        .ulasan-avatar { width:32px; height:32px; background:#fff3eb; color:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0; }
         .btn-admin-save { background:var(--accent); border:none; color:#fff; font-weight:700; padding:10px 22px; border-radius:10px; }
 
         @media (max-width: 576px) {
@@ -166,6 +176,9 @@ date_default_timezone_set('Asia/Jakarta');
             </button>
         </div>
     </div>
+
+
+    <?php $ULASAN_PARTIAL_MODE = 'view'; include __DIR__ . '/ulasan_destinasi_partial.php'; ?>
 
     <?php if ($is_admin): ?>
     <!-- ===================== PANEL ADMIN ===================== -->
