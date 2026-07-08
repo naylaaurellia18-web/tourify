@@ -42,9 +42,9 @@ $nama_kabupaten_bps = $nama_kabupaten_bps ?? '';
 // Kalau var_id belum diisi (masih string kosong ''), sistem akan
 // otomatis pakai data sample/estimasi supaya tampilan tidak rusak.
 // ============================================================
-define('BPS_VAR_ID_AKOMODASI', '');   // <-- isi var_id "Jumlah Hotel/Akomodasi per Kab/Kota"
-define('BPS_VAR_ID_PENDUDUK', '');    // <-- isi var_id "Jumlah Penduduk per Kab/Kota"
-define('BPS_API_KEY', '6df4ab3763735db26e99969daaf5c719');
+if (!defined('BPS_VAR_ID_AKOMODASI')) define('BPS_VAR_ID_AKOMODASI', '');   // <-- isi var_id "Jumlah Hotel/Akomodasi per Kab/Kota"
+if (!defined('BPS_VAR_ID_PENDUDUK'))  define('BPS_VAR_ID_PENDUDUK', '');    // <-- isi var_id "Jumlah Penduduk per Kab/Kota"
+if (!defined('BPS_API_KEY'))          define('BPS_API_KEY', '6df4ab3763735db26e99969daaf5c719');
 
 if ($STATISTIK_WILAYAH_MODE === 'logic') {
 
