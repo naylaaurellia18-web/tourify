@@ -74,12 +74,27 @@ $all_dest = [];
 $qall = mysqli_query($conn, "SELECT id_destinasi, nama_destinasi FROM destinasi ORDER BY nama_destinasi ASC");
 if ($qall) while ($r = mysqli_fetch_assoc($qall)) $all_dest[] = $r;
 
-// --- Ambil daftar destinasi yang SUDAH diulas oleh user yang sedang login ---
-// Dipakai untuk kasih tanda "✓ Sudah diulas" di dropdown & panel ringkasan.
+// --- Ambil RIWAYAT ULASAN milik user yang sedang login (semua destinasi) ---
+// Dipakai untuk: (a) panel "Riwayat Ulasan Saya" di atas, (b) tanda "✓ Sudah
+// diulas" di dropdown. Di-JOIN ke tabel destinasi supaya nama destinasinya ada,
+// dan diurutkan terbaru dulu supaya ulasan yang BARU SAJA dikirim langsung
+// muncul paling atas.
 $uname_esc = mysqli_real_escape_string($conn, $username);
-$sudah_diulas = []; // [id_destinasi => rating]
-$qsudah = mysqli_query($conn, "SELECT id_destinasi, rating FROM ulasan WHERE username='$uname_esc'");
-if ($qsudah) while ($r = mysqli_fetch_assoc($qsudah)) $sudah_diulas[(int)$r['id_destinasi']] = (int)$r['rating'];
+$riwayat_ulasan_saya = [];
+$sudah_diulas = []; // [id_destinasi => rating] (dipakai dropdown)
+$qriwayat = mysqli_query($conn, "
+    SELECT u.id, u.id_destinasi, u.rating, u.komentar, u.created_at, d.nama_destinasi
+    FROM ulasan u
+    LEFT JOIN destinasi d ON d.id_destinasi = u.id_destinasi
+    WHERE u.username='$uname_esc'
+    ORDER BY u.created_at DESC
+");
+if ($qriwayat) {
+    while ($r = mysqli_fetch_assoc($qriwayat)) {
+        $riwayat_ulasan_saya[] = $r;
+        $sudah_diulas[(int)$r['id_destinasi']] = (int)$r['rating'];
+    }
+}
 
 $tahun = date('Y');
 ?>
@@ -118,6 +133,10 @@ $tahun = date('Y');
         .ulasan-card { background:#fff; border-radius:16px; border:1px solid var(--border); padding:20px; margin-bottom:14px; }
         .star-display { color:#f59e0b; }
         .card-dest { background:#fff; border-radius:16px; border:1px solid var(--border); padding:24px; margin-bottom:24px; }
+        .riwayat-item { display:flex; justify-content:space-between; align-items:flex-start; gap:14px; padding:14px 0; border-bottom:1px solid var(--border); }
+        .riwayat-item:last-child { border-bottom:none; padding-bottom:0; }
+        .riwayat-item .btn-mini { font-size:0.76rem; font-weight:600; padding:5px 12px; border-radius:8px; text-decoration:none; white-space:nowrap; }
+        .riwayat-baru-badge { background:#fff3eb; color:var(--primary); font-size:0.68rem; font-weight:700; padding:2px 9px; border-radius:100px; margin-left:6px; vertical-align:middle; }
     </style>
 </head>
 <body>
@@ -159,6 +178,39 @@ $tahun = date('Y');
         <div class="alert alert-<?= $tipe_pesan === 'success' ? 'success' : 'danger' ?> border-0 rounded-3 mb-4"><?= $pesan ?></div>
         <?php endif; ?>
 
+        <!-- Riwayat Ulasan Saya: langsung tampil di atas, jadi begitu kirim/edit ulasan, hasilnya kelihatan di sini -->
+        <div class="card-dest">
+            <h6 class="fw-bold mb-3"><i class="bi bi-clock-history me-2" style="color:var(--primary);"></i>Riwayat Ulasan Saya (<?= count($riwayat_ulasan_saya) ?>)</h6>
+            <?php if (empty($riwayat_ulasan_saya)): ?>
+            <div class="text-center py-4 text-muted">
+                <i class="bi bi-star" style="font-size:2rem;opacity:0.3;"></i>
+                <p class="mt-2 mb-0 small">Kamu belum pernah memberi ulasan. Pilih destinasi di bawah untuk mulai memberi ulasan.</p>
+            </div>
+            <?php else: ?>
+            <?php foreach ($riwayat_ulasan_saya as $i => $r): ?>
+            <div class="riwayat-item">
+                <div>
+                    <div class="fw-semibold small">
+                        <?= htmlspecialchars($r['nama_destinasi'] ?? 'Destinasi') ?>
+                        <?php if ($i === 0 && $tipe_pesan === 'success'): ?><span class="riwayat-baru-badge">Baru saja</span><?php endif; ?>
+                    </div>
+                    <div class="star-display mb-1" style="font-size:0.85rem;">
+                        <?= str_repeat('★', (int)$r['rating']) ?><?= str_repeat('☆', 5 - (int)$r['rating']) ?>
+                        <span class="text-muted" style="font-size:0.75rem;"> · <?= date('d M Y', strtotime($r['created_at'])) ?></span>
+                    </div>
+                    <?php if (!empty($r['komentar'])): ?>
+                    <p class="mb-0 small text-muted"><?= nl2br(htmlspecialchars($r['komentar'])) ?></p>
+                    <?php endif; ?>
+                </div>
+                <div class="d-flex gap-2 flex-shrink-0">
+                    <a href="/ulasan.php?id=<?= $r['id_destinasi'] ?>" class="btn btn-mini" style="background:#fff3eb;color:var(--primary);"><i class="bi bi-pencil-square"></i> Edit</a>
+                    <a href="/ulasan.php?hapus=<?= $r['id'] ?>&id_dest=<?= $r['id_destinasi'] ?>" class="btn btn-mini" style="background:#fef2f2;color:#ef4444;" onclick="return confirm('Hapus ulasan ini?')"><i class="bi bi-trash"></i> Hapus</a>
+                </div>
+            </div>
+            <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
+
         <!-- Pilih Destinasi -->
         <div class="card-dest">
             <h6 class="fw-bold mb-3"><i class="bi bi-geo-alt me-2 text-warning"></i>Pilih Destinasi</h6>
@@ -173,24 +225,6 @@ $tahun = date('Y');
                 </select>
                 <button type="submit" class="btn fw-semibold" style="background:var(--primary);color:#fff;border-radius:10px;">Lihat Ulasan</button>
             </form>
-
-            <?php if (!empty($sudah_diulas)): ?>
-            <hr class="my-3">
-            <h6 class="fw-bold mb-2" style="font-size:0.85rem;color:var(--text-muted);">
-                <i class="bi bi-check-circle-fill me-1" style="color:#16a34a;"></i>
-                Destinasi yang sudah kamu ulas (<?= count($sudah_diulas) ?>)
-            </h6>
-            <div class="d-flex flex-wrap gap-2">
-                <?php foreach ($all_dest as $d): ?>
-                    <?php if (isset($sudah_diulas[$d['id_destinasi']])): ?>
-                    <a href="/ulasan.php?id=<?= $d['id_destinasi'] ?>" class="text-decoration-none d-flex align-items-center gap-1" style="background:#f0fdf4;border:1px solid #bbf7d0;color:#16a34a;padding:6px 12px;border-radius:100px;font-size:0.8rem;font-weight:600;">
-                        <?= htmlspecialchars($d['nama_destinasi']) ?>
-                        <span style="color:#f59e0b;"><?= str_repeat('★', $sudah_diulas[$d['id_destinasi']]) ?></span>
-                    </a>
-                    <?php endif; ?>
-                <?php endforeach; ?>
-            </div>
-            <?php endif; ?>
         </div>
 
         <?php if ($destinasi): ?>
