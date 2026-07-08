@@ -14,9 +14,9 @@
 //      $nama_kabupaten_bps = 'Kabupaten Magelang';
 //      include __DIR__ . '/statistik_wilayah_partial.php';
 //
-//  Lalu di dalam HTML, di tempat statistik ingin ditampilkan:
-//
-//      <?php include __DIR__ . '/statistik_wilayah_partial.php'; ?>
+//  Lalu di dalam HTML, di tempat statistik ingin ditampilkan, panggil:
+//      include __DIR__ . '/statistik_wilayah_partial.php';
+//  (dibungkus tag PHP seperti include partial ulasan di atasnya)
 //
 //  (variabel $STATISTIK_WILAYAH_MODE membedakan logika vs tampilan,
 //  sama seperti pola di ulasan_destinasi_partial.php)
