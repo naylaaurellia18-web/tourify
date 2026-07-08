@@ -38,12 +38,12 @@ $nama_kabupaten_bps = $nama_kabupaten_bps ?? '';
 // TODO (isi sebelum dipakai di production):
 // Cari var_id di https://webapi.bps.go.id/documentation/
 // -> menu "Data" -> cari subjek "Akomodasi" (untuk jumlah hotel/
-//    penginapan) dan subjek "Kependudukan" (untuk jumlah penduduk).
+//    penginapan) dan subjek "Statistik Kunjungan Wisatawan" (untuk jumlah pengunjung).
 // Kalau var_id belum diisi (masih string kosong ''), sistem akan
 // otomatis pakai data sample/estimasi supaya tampilan tidak rusak.
 // ============================================================
 if (!defined('BPS_VAR_ID_AKOMODASI')) define('BPS_VAR_ID_AKOMODASI', '');   // <-- isi var_id "Jumlah Hotel/Akomodasi per Kab/Kota"
-if (!defined('BPS_VAR_ID_PENDUDUK'))  define('BPS_VAR_ID_PENDUDUK', '');    // <-- isi var_id "Jumlah Penduduk per Kab/Kota"
+if (!defined('BPS_VAR_ID_PENGUNJUNG'))  define('BPS_VAR_ID_PENGUNJUNG', '');    // <-- isi var_id "Jumlah Pengunjung per Kab/Kota"
 if (!defined('BPS_API_KEY'))          define('BPS_API_KEY', '6df4ab3763735db26e99969daaf5c719');
 
 if ($STATISTIK_WILAYAH_MODE === 'logic') {
@@ -51,7 +51,7 @@ if ($STATISTIK_WILAYAH_MODE === 'logic') {
     $statwil_error       = null;
     $statwil_kecamatan   = [];   // daftar kecamatan resmi (real, dari endpoint yang sudah terbukti jalan)
     $statwil_akomodasi   = null;
-    $statwil_penduduk    = null;
+    $statwil_pengunjung    = null;
     $statwil_is_estimasi = false; // true kalau angka di bawah ini estimasi/sample, bukan API resmi
 
     if ($kode_kabupaten_bps !== null) {
@@ -69,14 +69,14 @@ if ($STATISTIK_WILAYAH_MODE === 'logic') {
             $statwil_error = "Data wilayah tidak tersedia dari API BPS untuk kabupaten ini.";
         }
 
-        // --- 2) Jumlah akomodasi & penduduk (data resmi kalau var_id sudah diisi) ---
-        if (BPS_VAR_ID_AKOMODASI !== '' && BPS_VAR_ID_PENDUDUK !== '') {
+        // --- 2) Jumlah akomodasi & pengunjung (data resmi kalau var_id sudah diisi) ---
+        if (BPS_VAR_ID_AKOMODASI !== '' && BPS_VAR_ID_PENGUNJUNG !== '') {
             try {
                 $url_akomodasi = "https://webapi.bps.go.id/v1/api/list/model/data/lang/ind/domain/{$kode_kabupaten_bps}/var/" . BPS_VAR_ID_AKOMODASI . "/key/" . BPS_API_KEY . "/";
-                $url_penduduk  = "https://webapi.bps.go.id/v1/api/list/model/data/lang/ind/domain/{$kode_kabupaten_bps}/var/" . BPS_VAR_ID_PENDUDUK  . "/key/" . BPS_API_KEY . "/";
+                $url_pengunjung  = "https://webapi.bps.go.id/v1/api/list/model/data/lang/ind/domain/{$kode_kabupaten_bps}/var/" . BPS_VAR_ID_PENGUNJUNG  . "/key/" . BPS_API_KEY . "/";
 
                 $r1 = @file_get_contents($url_akomodasi);
-                $r2 = @file_get_contents($url_penduduk);
+                $r2 = @file_get_contents($url_pengunjung);
 
                 if ($r1 !== FALSE && $r2 !== FALSE) {
                     $d1 = json_decode($r1, true);
@@ -86,7 +86,7 @@ if ($STATISTIK_WILAYAH_MODE === 'logic') {
                         $statwil_akomodasi = (int) reset($d1['datacontent']);
                     }
                     if (!empty($d2['datacontent']) && is_array($d2['datacontent'])) {
-                        $statwil_penduduk = (int) reset($d2['datacontent']);
+                        $statwil_pengunjung = (int) reset($d2['datacontent']);
                     }
                 }
             } catch (Exception $e) {
@@ -95,10 +95,10 @@ if ($STATISTIK_WILAYAH_MODE === 'logic') {
         }
 
         // --- Fallback: kalau data resmi gagal/var_id belum diisi, pakai estimasi berlabel jelas ---
-        if ($statwil_akomodasi === null || $statwil_penduduk === null) {
+        if ($statwil_akomodasi === null || $statwil_pengunjung === null) {
             $statwil_is_estimasi = true;
             if ($statwil_akomodasi === null) $statwil_akomodasi = rand(15, 80);
-            if ($statwil_penduduk  === null) $statwil_penduduk  = rand(150000, 950000);
+            if ($statwil_pengunjung  === null) $statwil_pengunjung  = rand(5000, 200000);
         }
     }
 
@@ -112,7 +112,7 @@ if ($STATISTIK_WILAYAH_MODE === 'logic') {
 
     <?php if ($statwil_is_estimasi): ?>
     <div class="alert alert-warning border-0 rounded-3 mb-3 small">
-        <i class="bi bi-info-circle me-1"></i> Angka akomodasi &amp; penduduk di bawah masih <strong>data estimasi</strong> (var_id BPS belum diisi). Data jumlah kecamatan tetap data resmi dari API BPS.
+        <i class="bi bi-info-circle me-1"></i> Angka akomodasi &amp; pengunjung di bawah masih <strong>data estimasi</strong> (var_id BPS belum diisi). Data jumlah kecamatan tetap data resmi dari API BPS.
     </div>
     <?php endif; ?>
 
@@ -131,8 +131,8 @@ if ($STATISTIK_WILAYAH_MODE === 'logic') {
         </div>
         <div class="col-md-4">
             <div class="p-3 rounded-3" style="background:#f8fafc;">
-                <div class="text-muted small">Jumlah Penduduk</div>
-                <div class="fw-bold fs-4"><?= number_format((int)$statwil_penduduk, 0, ',', '.') ?></div>
+                <div class="text-muted small">Jumlah Pengunjung</div>
+                <div class="fw-bold fs-4"><?= number_format((int)$statwil_pengunjung, 0, ',', '.') ?></div>
             </div>
         </div>
     </div>

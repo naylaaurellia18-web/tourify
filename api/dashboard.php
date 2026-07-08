@@ -151,7 +151,7 @@ if ($page === 'bps') {
             'kabupaten'      => $nama_kabupaten_bps,
             'kecamatan'      => count($statwil_kecamatan),
             'akomodasi'      => $statwil_akomodasi,
-            'penduduk'       => $statwil_penduduk,
+            'pengunjung'     => $statwil_pengunjung,
             'is_estimasi'    => $statwil_is_estimasi,
         ];
     }
@@ -457,11 +457,11 @@ if ($page === 'bps') {
                                 <span class="fw-semibold"><?= number_format((int)$stat['akomodasi'], 0, ',', '.') ?></span>
                             </div>
                             <div class="d-flex justify-content-between small">
-                                <span class="text-muted">Jumlah Penduduk</span>
-                                <span class="fw-semibold"><?= number_format((int)$stat['penduduk'], 0, ',', '.') ?></span>
+                                <span class="text-muted">Jumlah Pengunjung</span>
+                                <span class="fw-semibold"><?= number_format((int)$stat['pengunjung'], 0, ',', '.') ?></span>
                             </div>
                             <?php if ($stat['is_estimasi']): ?>
-                            <div class="small mt-2" style="color:#d97706;"><i class="bi bi-info-circle me-1"></i>Akomodasi &amp; penduduk masih estimasi</div>
+                            <div class="small mt-2" style="color:#d97706;"><i class="bi bi-info-circle me-1"></i>Akomodasi &amp; pengunjung masih estimasi</div>
                             <?php endif; ?>
                         </div>
                     </div>
