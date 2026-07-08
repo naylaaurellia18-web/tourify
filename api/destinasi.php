@@ -58,6 +58,17 @@ $destinasi_statis = [
     ['nama'=>'Solo Safari',                 'lokasi'=>'Surakarta',  'deskripsi'=>'Kawasan kebun binatang modern dengan konsep edukasi satwa yang interaktif.',                    'harga'=>60000,  'stok'=>25, 'gambar'=>'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSuZgalMALjLh8eeh4WdWlGIMKLeZ4RPPWGIg&s'],
 ];
 
+// --- Peta nama destinasi -> halaman detail (deskripsi + ulasan) ---
+// Dipakai supaya kartu di listing ini bisa diklik untuk lihat detail & ulasan
+// dulu, baru pesan tiket dari halaman detail tsb.
+$peta_detail_destinasi = [
+    'Candi Borobudur'                     => '/api/destinasi_borobudur.php',
+    'Rasamadu (The Heritage Palace)'      => '/api/destinasi_heritage.php',
+    'Taman Nasional Karimunjawa'          => '/api/destinasi_karimunjawa.php',
+    'Solo Safari'                         => '/api/destinasi_safari.php',
+    'Saloka Theme Park'                   => '/api/destinasi_saloka.php',
+];
+
 date_default_timezone_set('Asia/Jakarta');
 $tahun_aktif = date('Y');
 ?>
@@ -448,6 +459,7 @@ $tahun_aktif = date('Y');
                     $stok     = (int)($row['stok_tiket'] ?? 0);
                     $id_dest_ini = (int)$row['id_destinasi'];
                     $info_rating = $rating_map[$id_dest_ini] ?? ['rata' => 0, 'jml' => 0];
+                    $link_detail = $peta_detail_destinasi[$row['nama_destinasi'] ?? $row['nama'] ?? ''] ?? null;
 
                     if ($stok <= 0) {
                         $stok_bg = '#fef2f2'; $stok_color = '#ef4444'; $stok_label = 'Tiket Habis';
@@ -459,11 +471,20 @@ $tahun_aktif = date('Y');
                     ?>
                     <div class="col-md-6 col-lg-4">
                         <div class="destinasi-card">
+                            <?php if ($link_detail): ?>
+                            <a href="<?= $link_detail; ?>" class="text-decoration-none text-reset d-block">
+                            <?php endif; ?>
                             <div class="img-container">
                                 <span class="tag-lokasi"><i class="bi bi-geo-alt-fill text-danger me-1"></i><?= $lokasi; ?>, Jateng</span>
                                 <img src="<?= $gambar; ?>" alt="<?= $nama; ?>" onerror="this.src='https://via.placeholder.com/400x200?text=Gambar+Tidak+Tersedia'">
                             </div>
+                            <?php if ($link_detail): ?>
+                            </a>
+                            <?php endif; ?>
                             <div class="card-body-custom">
+                                <?php if ($link_detail): ?>
+                                <a href="<?= $link_detail; ?>" class="text-decoration-none text-reset d-block">
+                                <?php endif; ?>
                                 <div class="d-flex justify-content-between align-items-start gap-2">
                                     <h5 class="card-title mb-1"><?= $nama; ?></h5>
                                 </div>
@@ -476,6 +497,9 @@ $tahun_aktif = date('Y');
                                     <?php endif; ?>
                                 </div>
                                 <p class="card-desc"><?= $desc; ?></p>
+                                <?php if ($link_detail): ?>
+                                </a>
+                                <?php endif; ?>
                                 <div class="price-box">
                                     <div>
                                         <div class="price-label">Harga Tiket</div>
@@ -486,6 +510,10 @@ $tahun_aktif = date('Y');
                                     <button class="btn btn-pesan px-4 disabled" disabled title="Tiket sedang habis">
                                         Tiket Habis
                                     </button>
+                                    <?php elseif ($link_detail): ?>
+                                    <a href="<?= $link_detail; ?>" class="btn btn-pesan px-4">
+                                        Lihat &amp; Pesan
+                                    </a>
                                     <?php else: ?>
                                     <button class="btn btn-pesan px-4" onclick="pesanTiket('<?= addslashes($nama); ?>', '<?= $harga; ?>')">
                                         Pesan Tiket
@@ -501,6 +529,7 @@ $tahun_aktif = date('Y');
                 // TAMPILAN DATA FALLBACK JAWA TENGAH JIKA DATABASE KOSONG
                 foreach ($destinasi_statis as $item) {
                     $stok = (int)($item['stok'] ?? 0);
+                    $link_detail = $peta_detail_destinasi[$item['nama']] ?? null;
                     if ($stok <= 0) {
                         $stok_bg = '#fef2f2'; $stok_color = '#ef4444'; $stok_label = 'Tiket Habis';
                     } elseif ($stok < 10) {
@@ -511,13 +540,25 @@ $tahun_aktif = date('Y');
                     ?>
                     <div class="col-md-6 col-lg-4">
                         <div class="destinasi-card">
+                            <?php if ($link_detail): ?>
+                            <a href="<?= $link_detail; ?>" class="text-decoration-none text-reset d-block">
+                            <?php endif; ?>
                             <div class="img-container">
                                 <span class="tag-lokasi"><i class="bi bi-geo-alt-fill text-danger me-1"></i><?= $item['lokasi']; ?>, Jateng</span>
                                 <img src="<?= $item['gambar']; ?>" alt="<?= $item['nama']; ?>" onerror="this.src='https://via.placeholder.com/400x200?text=Gambar+Tidak+Tersedia'">
                             </div>
+                            <?php if ($link_detail): ?>
+                            </a>
+                            <?php endif; ?>
                             <div class="card-body-custom">
+                                <?php if ($link_detail): ?>
+                                <a href="<?= $link_detail; ?>" class="text-decoration-none text-reset d-block">
+                                <?php endif; ?>
                                 <h5 class="card-title"><?= $item['nama']; ?></h5>
                                 <p class="card-desc"><?= $item['deskripsi']; ?></p>
+                                <?php if ($link_detail): ?>
+                                </a>
+                                <?php endif; ?>
                                 <div class="price-box">
                                     <div>
                                         <div class="price-label">Harga Tiket</div>
@@ -528,6 +569,10 @@ $tahun_aktif = date('Y');
                                     <button class="btn btn-pesan px-4 disabled" disabled title="Tiket sedang habis">
                                         Tiket Habis
                                     </button>
+                                    <?php elseif ($link_detail): ?>
+                                    <a href="<?= $link_detail; ?>" class="btn btn-pesan px-4">
+                                        Lihat &amp; Pesan
+                                    </a>
                                     <?php else: ?>
                                     <button class="btn btn-pesan px-4" onclick="pesanTiket('<?= addslashes($item['nama']); ?>', '<?= $item['harga']; ?>')">
                                         Pesan Tiket
