@@ -130,6 +130,31 @@ if ($page === 'bps') {
         $bps_labels[] = substr($row['domain_name'], 0, 15) . '...';
         $bps_values[] = rand(20, 100); // Data sample, BPS tidak menyediakan angka statistik di endpoint domain
     }
+
+    // --- Statistik per destinasi (gabungan dari tiap halaman destinasi) ---
+    $destinasi_bps_daftar = [
+        ['nama' => 'Candi Borobudur',              'kode' => '3308', 'kabupaten' => 'Kabupaten Magelang'],
+        ['nama' => 'Heritage',                      'kode' => '3311', 'kabupaten' => 'Kabupaten Sukoharjo'],
+        ['nama' => 'Safari',                         'kode' => '3372', 'kabupaten' => 'Kota Surakarta'],
+        ['nama' => 'Saloka Theme Park',              'kode' => '3374', 'kabupaten' => 'Kota Semarang'],
+        ['nama' => 'Taman Nasional Karimunjawa',     'kode' => '3320', 'kabupaten' => 'Kabupaten Jepara'],
+    ];
+    $destinasi_bps_stats = [];
+    foreach ($destinasi_bps_daftar as $dest) {
+        $kode_kabupaten_bps     = $dest['kode'];
+        $nama_kabupaten_bps     = $dest['kabupaten'];
+        $STATISTIK_WILAYAH_MODE = 'logic';
+        include __DIR__ . '/statistik_wilayah_partial.php';
+
+        $destinasi_bps_stats[] = [
+            'nama_destinasi' => $dest['nama'],
+            'kabupaten'      => $nama_kabupaten_bps,
+            'kecamatan'      => count($statwil_kecamatan),
+            'akomodasi'      => $statwil_akomodasi,
+            'penduduk'       => $statwil_penduduk,
+            'is_estimasi'    => $statwil_is_estimasi,
+        ];
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -408,6 +433,39 @@ if ($page === 'bps') {
                         </div>
                         <p class="text-muted small mt-3 mb-0 text-center">Ditampilkan dari 5 wilayah pertama hasil API BPS.</p>
                     </div>
+                </div>
+            </div>
+
+            <!-- Statistik per Destinasi (gabungan) -->
+            <div class="card info-card mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <h5 class="fw-bold text-dark mb-0"><i class="bi bi-geo-alt-fill me-2" style="color:var(--accent);"></i>Statistik Wilayah per Destinasi</h5>
+                    <span class="small text-muted">Sumber: Badan Pusat Statistik (BPS)</span>
+                </div>
+                <div class="row g-3">
+                    <?php foreach ($destinasi_bps_stats as $stat): ?>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="p-3 rounded-3 h-100" style="background:#f8fafc;">
+                            <div class="fw-bold text-dark"><?= htmlspecialchars($stat['nama_destinasi']) ?></div>
+                            <div class="text-muted small mb-2"><?= htmlspecialchars($stat['kabupaten']) ?></div>
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span class="text-muted">Jumlah Kecamatan</span>
+                                <span class="fw-semibold"><?= $stat['kecamatan'] ?: '-' ?></span>
+                            </div>
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span class="text-muted">Akomodasi / Hotel</span>
+                                <span class="fw-semibold"><?= number_format((int)$stat['akomodasi'], 0, ',', '.') ?></span>
+                            </div>
+                            <div class="d-flex justify-content-between small">
+                                <span class="text-muted">Jumlah Penduduk</span>
+                                <span class="fw-semibold"><?= number_format((int)$stat['penduduk'], 0, ',', '.') ?></span>
+                            </div>
+                            <?php if ($stat['is_estimasi']): ?>
+                            <div class="small mt-2" style="color:#d97706;"><i class="bi bi-info-circle me-1"></i>Akomodasi &amp; penduduk masih estimasi</div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
                 </div>
             </div>
             <?php endif; ?>
