@@ -52,7 +52,9 @@ if (isset($conn)) {
         $user_escaped = mysqli_real_escape_string($conn, $username_login);
 
         // FIX: kolom yang benar adalah total_bayar (bukan harga)
-        $q_order = mysqli_query($conn, "SELECT COUNT(*) as total, SUM(total_bayar) as total_pengeluaran FROM pesanan WHERE username = '$user_escaped'");
+        // FIX: pesanan berstatus 'dibatalkan' tidak dihitung sebagai dana keluar
+        // (status IS NULL tetap dihitung, untuk data lama sebelum kolom status ada)
+        $q_order = mysqli_query($conn, "SELECT COUNT(*) as total, SUM(total_bayar) as total_pengeluaran FROM pesanan WHERE username = '$user_escaped' AND (status IS NULL OR status != 'dibatalkan')");
         if ($q_order) { 
             $row_order = mysqli_fetch_assoc($q_order); 
             $total_pesanan     = $row_order['total'] ?? 0;
