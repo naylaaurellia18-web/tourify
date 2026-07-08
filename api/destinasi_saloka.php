@@ -69,6 +69,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['simpan_admin']) && $i
 $ULASAN_PARTIAL_MODE = 'logic';
 include __DIR__ . '/ulasan_destinasi_partial.php';
 
+// --- Widget statistik wilayah BPS: siapkan data SEBELUM ada output HTML ---
+$kode_kabupaten_bps      = '3374'; // Kota Semarang
+$nama_kabupaten_bps      = 'Kota Semarang';
+$STATISTIK_WILAYAH_MODE  = 'logic';
+include __DIR__ . '/statistik_wilayah_partial.php';
+
 $nama      = $d['nama_destinasi'] ?? $nama_default;
 $lokasi    = $d['lokasi'] ?? $lokasi_default;
 $deskripsi = $d['deskripsi'] ?? $deskripsi_default;
@@ -179,6 +185,8 @@ date_default_timezone_set('Asia/Jakarta');
 
 
     <?php $ULASAN_PARTIAL_MODE = 'view'; include __DIR__ . '/ulasan_destinasi_partial.php'; ?>
+
+    <?php $STATISTIK_WILAYAH_MODE = 'view'; include __DIR__ . '/statistik_wilayah_partial.php'; ?>
 
     <?php if ($is_admin): ?>
     <!-- ===================== PANEL ADMIN ===================== -->
